@@ -815,6 +815,7 @@ async def auto_check_mys_official_message():
     # 对需要检查的官号
     for uid in plugin_config.preference.mys_official_message['mys_official_uids']:
         new_message_list = await get_mys_official_message(uid)
+        await asyncio.sleep(1)
         all_message_list += new_message_list
     for new_message in all_message_list:
         msg = "米游社官号消息监控" \

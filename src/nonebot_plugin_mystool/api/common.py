@@ -1883,7 +1883,9 @@ class MysMessageFetcher(BaseModel):
     }
     """
     uid: str
-    _first_time_flag = True
+    _first_time_flag: Dict[str, bool] = {
+        "75276539":True
+    }
 
     _latest_datas: Dict[str, Any] = {"75276539": None}  # 类变量，用于存储最新的数据
 
@@ -1904,17 +1906,20 @@ class MysMessageFetcher(BaseModel):
         except Exception as e:
             logger.debug(f'判断米游社消息是否存在失败! {str(e)}')
         return False
-    def is_first_time(self) -> bool:
+    def is_first_time(self, uid) -> bool:
         """
         判断是不是第一次启动，防止第一次启动发送过多消息
         """
-        return self.__class__._first_time_flag
+        if uid not in self.__class__._first_time_flag:
+            self.__class__._first_time_flag[uid] = False
+            return True
+        return self.__class__._first_time_flag[uid]
     
-    def change_first_time(self):
+    def change_first_time(self, uid):
         """
         修改第一次启动标签
         """
-        self.__class__._first_time_flag = False
+        self.__class__._first_time_flag[uid] = False
 
 
 async def get_mys_official_message(uid: str) -> List[Dict[str, str]]:
@@ -1940,9 +1945,9 @@ async def get_mys_official_message(uid: str) -> List[Dict[str, str]]:
         try:
             dynamic_list = response_data['data']['list']
             mys = MysMessageFetcher(uid = uid)
-            if mys.is_first_time():
+            if mys.is_first_time(uid):
                 re_dynamic_list = dynamic_list
-                mys.change_first_time()
+                mys.change_first_time(uid)
             else:
                 re_dynamic_list = reversed(dynamic_list) # 这里翻转一下动态列表，因为请求返回的数据最新一条在上面，翻转过后从旧的往前面判断
             
