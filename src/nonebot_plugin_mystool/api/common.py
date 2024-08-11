@@ -1879,36 +1879,42 @@ class MysMessageFetcher(BaseModel):
     """
     判断米游社动态消息是否已存在
     _latest_datas = {
-        官号uid:最后一条动态id
+        官号uid: 最后一条动态id
     }
     """
-    _latest_datas: Dict[str, Any] = {
-        "75276539":None
-    }  # 类变量，用于存储最新的数据
+    uid: str
+    _first_time_flag = True
 
-    def __init__(self, uid: str):
-        super().__init__(uid=uid)
+    _latest_datas: Dict[str, Any] = {"75276539": None}  # 类变量，用于存储最新的数据
 
-        self.uid = uid
-
-
-    def is_new(self, post_id: str) -> Boolean:
+    def is_new(self, post_id: str) -> bool:
         """
         判断是否为新消息
         """
         try:
-            if self.uid not in _latest_datas:
-                _latest_datas[self.uid] = post_id
+            if self.uid not in self.__class__._latest_datas:
+                self.__class__._latest_datas[self.uid] = post_id
+                return False
+            elif not self.__class__._latest_datas[self.uid]:
+                self.__class__._latest_datas[self.uid] = post_id
+                return False
+            elif int(post_id) > int(self.__class__._latest_datas[self.uid]):
+                self.__class__._latest_datas[self.uid] = post_id
                 return True
-            elif not _latest_datas[self.uid]:
-                _latest_datas[self.uid] = post_id
-                return True
-            elif int(post_id) > int(_latest_datas[self.uid]):
-                _latest_datas[self.uid] = post_id
-                return True
-        except:
-            logger.debug(f'判断米游社消息是否存在失败!')
+        except Exception as e:
+            logger.debug(f'判断米游社消息是否存在失败! {str(e)}')
         return False
+    def is_first_time(self) -> bool:
+        """
+        判断是不是第一次启动，防止第一次启动发送过多消息
+        """
+        return self.__class__._first_time_flag
+    
+    def change_first_time(self):
+        """
+        修改第一次启动标签
+        """
+        self.__class__._first_time_flag = False
 
 
 async def get_mys_official_message(uid: str) -> List[Dict[str, str]]:
@@ -1933,25 +1939,33 @@ async def get_mys_official_message(uid: str) -> List[Dict[str, str]]:
         
         try:
             dynamic_list = response_data['data']['list']
-            re_dynamic_list = reversed(dynamic_list) # 这里翻转一下动态列表，因为请求返回的数据最新一条在上面，翻转过后从旧的往前面判断
-            mys = MysMessageFetcher(uid)
+            mys = MysMessageFetcher(uid = uid)
+            if mys.is_first_time():
+                re_dynamic_list = dynamic_list
+                mys.change_first_time()
+            else:
+                re_dynamic_list = reversed(dynamic_list) # 这里翻转一下动态列表，因为请求返回的数据最新一条在上面，翻转过后从旧的往前面判断
+            
             result = []
             for dynamic in re_dynamic_list:
                 if mys.is_new(dynamic['post']['post_id']):
-                    strf_time = datetime.datetime.fromtimestamp(dynamic['user']['created_at']).strftime('%Y-%m-%d %H:%M:%S') # 把时间戳转换一下
+                    strf_time = datetime.datetime.fromtimestamp(dynamic['post']['created_at']).strftime('%Y-%m-%d %H:%M:%S') # 把时间戳转换一下
+                    images = dynamic['post']['images'][0] if dynamic['post']['images'] else [] # 处理没有图片的消息
                     new_dynamic = {
                         "post_id":dynamic['post']['post_id'],
                         "subject":dynamic['post']['subject'],
                         "content":dynamic['post']['content'],
-                        "images":dynamic['post']['images'][0],
+                        "images":images,
                         "nick_name":dynamic['user']['nickname'],
                         "time":strf_time
                     }
                     result.append(new_dynamic)
             
             return result
-        except:
+        except Exception as e:
             logger.debug(f'解析请求米游社返回的动态消息数据失败!')
+            return []
     except:
         # 后续进行错误处理
         logger.debug(f'异步请求米游社动态消息失败，uid为{uid}')
+        return []

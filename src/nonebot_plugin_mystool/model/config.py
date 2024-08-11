@@ -104,10 +104,10 @@ class Preference(BaseModel):
     qrcode_wait_time: float = 120
     """等待米游社登录二维码扫描的最长时间（单位：秒）"""
     mys_official_message:Dict[str, Any] = {
-        mys_official_uids: ['75276539'],
-        request_time_interval: 5,
-        qq_group_list: [],
-        qq_user: []
+        "mys_official_uids": ['75276539', '152039148', '288909600'],
+        "request_time_interval": 5,
+        "qq_group_list": [],
+        "qq_user": []
     }
     """
     米游社自动检查官号消息相关设置

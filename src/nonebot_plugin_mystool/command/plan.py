@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from ..api import BaseGameSign
 from ..api import BaseMission, get_missions_state
-from ..api.common import genshin_note, get_game_record, starrail_note
+from ..api.common import genshin_note, get_game_record, starrail_note, get_mys_official_message
 from ..api.weibo import WeiboCode, WeiboSign
 from ..command.common import CommandRegistry
 from ..command.exchange import generate_image
@@ -814,8 +814,8 @@ async def auto_check_mys_official_message():
     all_message_list = []
     # 对需要检查的官号
     for uid in plugin_config.preference.mys_official_message['mys_official_uids']:
-        new_message_list = get_mys_official_message(uid)
-    all_message_list += new_message_list
+        new_message_list = await get_mys_official_message(uid)
+        all_message_list += new_message_list
     for new_message in all_message_list:
         msg = "米游社官号消息监控" \
             f"\n官号{new_message['nick_name']}于{new_message['time']}发布了消息：" \
@@ -823,9 +823,9 @@ async def auto_check_mys_official_message():
             f"\n内容:{new_message['content']}" \
             f"\n图片:{new_message['images']}"
         
-        for usr in plugin_config.preference.mys_official_message.qq_group_list:
+        for usr in plugin_config.preference.mys_official_message['qq_group_list']:
             await send_group_msg(group_id = usr, message = msg)
-        for usr in plugin_config.preference.mys_official_message.qq_user:
-            await send_private_msg(user_id=user_id, message=msg)
+        for usr in plugin_config.preference.mys_official_message['qq_user']:
+            await send_private_msg(user_id=usr, message=msg)
 
     logger.info(f"{plugin_config.preference.log_head}米游社官号消息检查完成")
