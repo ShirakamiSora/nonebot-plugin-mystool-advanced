@@ -24,7 +24,7 @@ from ..command.exchange import generate_image
 from ..model import (MissionStatus, PluginDataManager, plugin_config, UserData, CommandUsage, GenshinNoteNotice,
                      StarRailNoteNotice)
 from ..utils import get_file, logger, COMMAND_BEGIN, GeneralMessageEvent, GeneralGroupMessageEvent, \
-    send_private_msg, get_all_bind, \
+    send_private_msg, get_all_bind, send_group_msg, \
     get_unique_users, get_validate, read_admin_list
 
 __all__ = [
@@ -800,3 +800,32 @@ async def auto_weibo_check():
         # await weibo_sign_check(user=user, user_ids=user_ids)
         await weibo_code_check(user=user, user_ids=user_ids, mode=1)
     logger.info(f"{plugin_config.preference.log_head}微博自动任务执行完成")
+
+
+
+@scheduler.scheduled_job("interval",
+                         minutes=plugin_config.preference.mys_official_message['request_time_interval'],
+                         id="mys_message_check")
+async def auto_check_mys_official_message():
+    """
+    自动查看米游社官号信息并发送至设定群中
+    """
+    logger.info(f"{plugin_config.preference.log_head}开始执行米游社官号消息检查")
+    all_message_list = []
+    # 对需要检查的官号
+    for uid in plugin_config.preference.mys_official_message['mys_official_uids']:
+        new_message_list = get_mys_official_message(uid)
+    all_message_list += new_message_list
+    for new_message in all_message_list:
+        msg = "米游社官号消息监控" \
+            f"\n官号{new_message['nick_name']}于{new_message['time']}发布了消息：" \
+            f"\n标题:{new_message['subject']}" \
+            f"\n内容:{new_message['content']}" \
+            f"\n图片:{new_message['images']}"
+        
+        for usr in plugin_config.preference.mys_official_message.qq_group_list:
+            await send_group_msg(group_id = usr, message = msg)
+        for usr in plugin_config.preference.mys_official_message.qq_user:
+            await send_private_msg(user_id=user_id, message=msg)
+
+    logger.info(f"{plugin_config.preference.log_head}米游社官号消息检查完成")

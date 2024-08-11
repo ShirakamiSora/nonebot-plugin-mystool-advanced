@@ -26,7 +26,7 @@ except ImportError:
 from nonebot import Adapter, Bot
 
 from nonebot_plugin_saa import MessageSegmentFactory, Text, AggregatedMessageFactory, TargetQQPrivate, \
-    TargetQQGuildDirect, enable_auto_select_bot
+    TargetQQGuildDirect, enable_auto_select_bot, TargetQQGroup
 
 from nonebot.adapters.onebot.v11 import MessageEvent as OneBotV11MessageEvent, PrivateMessageEvent, GroupMessageEvent, \
     Adapter as OneBotV11Adapter, Bot as OneBotV11Bot
@@ -395,6 +395,48 @@ async def send_private_msg(
                 target = TargetQQGuildDirect(recipient_id=user_id_int, source_guild_id=guild_id)
                 logger.info(f"{plugin_config.preference.log_head}向用户 {user_id} 发送 QQ 频道私信"
                             f" recipient_id: {user_id_int}, source_guild_id: {guild_id}")
+
+            await message.send_to(target=target, bot=bot)
+        except Exception as e:
+            return False, e
+        else:
+            return True, None
+
+
+async def send_group_msg(
+        group_id: str,
+        message: Union[str, MessageSegmentFactory, AggregatedMessageFactory],
+        use: Union[Bot, Adapter] = None,
+        guild_id: int = None
+) -> Tuple[bool, Optional[Exception]]:
+    """
+    主动发送QQ群消息
+
+    :param group_id: QQ群ID
+    :param message: 消息内容
+    :param use: 使用的Bot或Adapter，为None则使用所有Bot
+    :param guild_id: 用户所在频道ID，为None则从用户数据中获取
+    :return: (是否发送成功, ActionFailed Exception)
+    """
+    group_id_int = int(group_id)
+    if isinstance(message, str):
+        message = Text(message)
+
+    # 整合符合条件的 Bot 对象
+    if isinstance(use, (OneBotV11Bot, QQGuildBot)):
+        bots = [use]
+    elif isinstance(use, (OneBotV11Adapter, QQGuildAdapter)):
+        bots = use.bots.values()
+    else:
+        bots = nonebot.get_bots().values()
+
+    for bot in bots:
+        try:
+            # 获取 PlatformTarget 对象, 暂不考虑其他情况
+            if isinstance(bot, OneBotV11Bot):
+                target = TargetQQGroup(group_id=group_id_int)
+                logger.info(
+                    f"{plugin_config.preference.log_head}向用户 {group_id} 发送 QQ 群消息 group_id: {group_id_int}")
 
             await message.send_to(target=target, bot=bot)
         except Exception as e:

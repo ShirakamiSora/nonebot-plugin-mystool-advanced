@@ -2,7 +2,7 @@ import os
 import sys
 from datetime import time, timedelta, datetime
 from pathlib import Path
-from typing import Union, Optional, Tuple, Any, Dict, TYPE_CHECKING
+from typing import Union, Optional, Tuple, Any, Dict, TYPE_CHECKING, List
 
 import nonebot
 from nonebot.log import logger
@@ -103,6 +103,19 @@ class Preference(BaseModel):
     """检查米游社登录二维码扫描情况的请求间隔（单位：秒）"""
     qrcode_wait_time: float = 120
     """等待米游社登录二维码扫描的最长时间（单位：秒）"""
+    mys_official_message:Dict[str, Any] = {
+        mys_official_uids: ['75276539'],
+        request_time_interval: 5,
+        qq_group_list: [],
+        qq_user: []
+    }
+    """
+    米游社自动检查官号消息相关设置
+    mys_official_uid:米游社官号uid列表，默认为原神、星铁、绝区零
+    request_time_interval:每次请求间隔，单位分钟，不建议调成太低，容易被风控
+    qq_group_list:检查到新消息后发送到的qq群
+    qq_user:检查到新消息后发送到的qq用户
+    """
 
     @validator("log_path", allow_reuse=True)
     def _(cls, v: Optional[Path]):
