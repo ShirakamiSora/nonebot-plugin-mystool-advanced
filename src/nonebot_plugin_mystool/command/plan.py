@@ -822,7 +822,10 @@ async def auto_check_mys_official_message():
             f"\n官号{new_message['nick_name']}于{new_message['time']}发布了消息：" \
             f"\n标题:{new_message['subject']}" \
             f"\n内容:{new_message['content']}" \
-            f"\n图片:{new_message['images']}"
+            f"\n图片:"
+        img_file = await get_file(new_message['images'])
+        saa_img = Image(img_file)
+        msg += saa_img
         
         for usr in plugin_config.preference.mys_official_message['qq_group_list']:
             await send_group_msg(group_id = usr, message = msg)
