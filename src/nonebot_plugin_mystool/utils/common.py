@@ -445,6 +445,17 @@ async def send_group_msg(
             return True, None
 
 
+def wrap_and_forward_message(
+    messages: List[Union[str, MessageSegmentFactory, AggregatedMessageFactory]]
+) -> AggregatedMessageFactory:
+    """
+    将普通消息封装成合并转发形式
+    messages: 消息列表
+    """
+    
+    return AggregatedMessageFactory([Text(msg) if isinstance(msg, str) else msg for msg in messages ])
+
+
 def get_unique_users() -> Iterable[Tuple[str, UserData]]:
     """
     获取 不包含绑定用户数据 的所有用户数据以及对应的ID，即不会出现值重复项

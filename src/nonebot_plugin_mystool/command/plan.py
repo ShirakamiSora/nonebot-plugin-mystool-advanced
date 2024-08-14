@@ -24,7 +24,7 @@ from ..command.exchange import generate_image
 from ..model import (MissionStatus, PluginDataManager, plugin_config, UserData, CommandUsage, GenshinNoteNotice,
                      StarRailNoteNotice)
 from ..utils import get_file, logger, COMMAND_BEGIN, GeneralMessageEvent, GeneralGroupMessageEvent, \
-    send_private_msg, get_all_bind, send_group_msg, \
+    send_private_msg, get_all_bind, send_group_msg, wrap_and_forward_message, \
     get_unique_users, get_validate, read_admin_list
 
 __all__ = [
@@ -817,16 +817,27 @@ async def auto_check_mys_official_message():
         new_message_list = await get_mys_official_message(uid)
         await asyncio.sleep(1)
         all_message_list += new_message_list
-    for new_message in all_message_list:
+    for index, new_message in enumerate(all_message_list):
         msg = "米游社官号消息监控" \
             f"\n官号{new_message['nick_name']}于{new_message['time']}发布了消息：" \
             f"\n标题:{new_message['subject']}" \
             f"\n内容:{new_message['content']}" \
             f"\n图片:"
-        img_file = await get_file(new_message['images'])
-        saa_img = Image(img_file)
-        msg += saa_img
+        if new_message['images']:
+            img_file = await get_file(new_message['images'])
+            saa_img = Image(img_file)
+            msg += saa_img
         
+        # 一次性获取多条数据，单独处理
+        if len(all_message_list) >= 3:
+            all_message_list[index] = msg
+            if index + 1 < len(all_message_list):
+                continue
+            all_message_list = [f'********本次有{len(all_message_list)}条消息即将发送********'] + all_message_list
+            forward_messages = wrap_and_forward_message(all_message_list)
+            msg = forward_messages
+
+        # 对群发和私聊
         for usr in plugin_config.preference.mys_official_message['qq_group_list']:
             await send_group_msg(group_id = usr, message = msg)
         for usr in plugin_config.preference.mys_official_message['qq_user']:
