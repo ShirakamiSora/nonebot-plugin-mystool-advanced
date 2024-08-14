@@ -42,7 +42,7 @@ __all__ = ["GeneralMessageEvent", "GeneralPrivateMessageEvent", "GeneralGroupMes
            "get_last_command_sep", "COMMAND_BEGIN", "set_logger", "logger", "PLUGIN", "custom_attempt_times",
            "get_async_retry", "generate_device_id", "cookie_str_to_dict", "cookie_dict_to_str", "generate_ds",
            "get_validate", "generate_seed_id", "generate_fp_locally", "get_file", "blur_phone", "generate_qr_img",
-           "send_private_msg", "send_group_msg", "get_unique_users", "get_all_bind", "read_blacklist", "read_whitelist",
+           "send_private_msg", "send_group_msg", "wrap_and_forward_message", "get_unique_users", "get_all_bind", "read_blacklist", "read_whitelist",
            "read_admin_list"]
 
 # 启用 nonebot-plugin-send-anything-anywhere 的自动选择 Bot 功能
