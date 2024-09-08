@@ -436,7 +436,7 @@ async def send_group_msg(
             if isinstance(bot, OneBotV11Bot):
                 target = TargetQQGroup(group_id=group_id_int)
                 logger.info(
-                    f"{plugin_config.preference.log_head}向用户 {group_id} 发送 QQ 群消息 group_id: {group_id_int}")
+                    f"{plugin_config.preference.log_head}向群 {group_id} 发送 QQ 群消息 group_id: {group_id_int}")
 
             await message.send_to(target=target, bot=bot)
         except Exception as e:

@@ -1952,10 +1952,23 @@ async def get_mys_official_message(uid: str) -> List[Dict[str, str]]:
                 re_dynamic_list = reversed(dynamic_list) # 这里翻转一下动态列表，因为请求返回的数据最新一条在上面，翻转过后从旧的往前面判断
             
             result = []
+            """
+            判断一下消息类型
+            view_type:
+            1 图片动态
+            5 视频动态（图片取cover中的链接）
+            暂时没看到有其他类型
+            """
             for dynamic in re_dynamic_list:
                 if mys.is_new(dynamic['post']['post_id']):
                     strf_time = datetime.datetime.fromtimestamp(dynamic['post']['created_at']).strftime('%Y-%m-%d %H:%M:%S') # 把时间戳转换一下
-                    images = dynamic['post']['images'][0] if dynamic['post']['images'] else [] # 处理没有图片的消息
+
+                    # 增加视频和普通图片动态取图片的区分
+                    if str(dynamic['post']['view_type']) == '5':
+                        images =  dynamic['post']['cover']
+                    else:
+                        images = dynamic['post']['images'][0] if dynamic['post']['images'] else [] # 处理没有图片的消息
+                        
                     new_dynamic = {
                         "post_id":dynamic['post']['post_id'],
                         "subject":dynamic['post']['subject'],

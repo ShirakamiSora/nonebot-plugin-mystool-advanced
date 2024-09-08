@@ -116,6 +116,8 @@ class Preference(BaseModel):
     qq_group_list:检查到新消息后发送到的qq群
     qq_user:检查到新消息后发送到的qq用户
     """
+    sign_retry_times: int = 5
+    """签到失败默认重试次数"""
 
     @validator("log_path", allow_reuse=True)
     def _(cls, v: Optional[Path]):

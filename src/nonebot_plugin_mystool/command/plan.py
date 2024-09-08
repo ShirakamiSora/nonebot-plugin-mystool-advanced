@@ -1,6 +1,6 @@
 import asyncio
 import threading
-from typing import Union, Optional, Iterable, Dict
+from typing import Union, Optional, Iterable, Dict, Set, Type
 
 from nonebot import on_command, get_adapters
 from nonebot.adapters.onebot.v11 import MessageSegment as OneBotV11MessageSegment, Adapter as OneBotV11Adapter, \
@@ -210,7 +210,9 @@ async def perform_game_sign(
         user: UserData,
         user_ids: Iterable[str],
         matcher: Matcher = None,
-        event: Union[GeneralMessageEvent] = None
+        event: Union[GeneralMessageEvent] = None,
+        need_sign_games: Set[Type["BaseGameSign"]] = BaseGameSign.available_game_signs,
+        retry_times: int = 0
 ):
     """
     执行游戏签到函数，并发送给用户签到消息。
@@ -239,7 +241,12 @@ async def perform_game_sign(
                     )
             continue
         games_has_record = []
-        for class_type in BaseGameSign.available_game_signs:
+        """
+        增加签到失败自动签到功能，将原有的 BaseGameSign.available_game_signs 替换为 可更改的 need_sign_games。
+        对第一次自动签到失败的游戏添加到该变量中，并在下一次进行签到执行，防止重复签到
+        """
+        failed_games = set()
+        for class_type in need_sign_games:
             signer = class_type(account, records)
             if not signer.has_record:
                 continue
@@ -278,6 +285,7 @@ async def perform_game_sign(
                                    "请尝试使用命令『/账号设置』更改设备平台，若仍失败请手动前往米游社签到")
                     else:
                         message = f"⚠️账户 {account.display_name} 🎮『{signer.name}』签到失败，请稍后再试"
+                    failed_games.add(signer)
                     if matcher:
                         await matcher.send(message)
                     elif user.enable_notice:
@@ -347,6 +355,19 @@ async def perform_game_sign(
     if len(failed_accounts) == len(user.accounts):
         user.enable_notice = False
         PluginDataManager.write_plugin_data()
+    
+    # 增加签到失败后自动重试
+    if retry_times < plugin_config.preference.sign_retry_times:
+        random_relay = random.randint(5 * 60, 30 * 60)
+
+        message = f"⚠️账户 {account.display_name}下游戏 🎮『{signer.name}』签到失败，将在{random_relay // 60}分{random_relay % 60}秒后自动进行第{retry_times + 1}次重签"
+        if matcher:
+            await matcher.send(message)
+        elif user.enable_notice:
+            for user_id in user_ids:
+                await send_private_msg(user_id=user_id, message=message)
+        await asyncio.sleep(random_relay)
+        await perform_game_sign(user = user, user_ids= user_id, matcher= matcher, event= event, need_sign_games= failed_games, retry_times= retry_times + 1)
 
 
 async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Matcher = None):
