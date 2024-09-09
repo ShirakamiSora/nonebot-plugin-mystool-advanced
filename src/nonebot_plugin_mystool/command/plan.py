@@ -1,5 +1,6 @@
 import asyncio
 import threading
+import random
 from typing import Union, Optional, Iterable, Dict, Set, Type
 
 from nonebot import on_command, get_adapters
