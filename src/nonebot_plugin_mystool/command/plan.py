@@ -358,10 +358,17 @@ async def perform_game_sign(
         PluginDataManager.write_plugin_data()
     
     # 增加签到失败后自动重试
-    if retry_times < plugin_config.preference.sign_retry_times:
+    if failed_games and (retry_times < plugin_config.preference.sign_retry_times):
         random_relay = random.randint(5 * 60, 30 * 60)
-
-        message = f"⚠️账户 {account.display_name}下游戏 🎮『{signer.name}』签到失败，将在{random_relay // 60}分{random_relay % 60}秒后自动进行第{retry_times + 1}次重签"
+        
+        need_resign_games = ''
+        if len(failed_games) > 1:
+            for game in failed_games:
+                need_resign_games = need_resign_games + game.name + '、'
+            need_resign_games = need_resign_games[:-1]
+        else:
+            need_resign_games = next(iter(failed_games)).name
+        message = f"⚠️账户 {account.display_name}下游戏 🎮『{need_resign_games}』签到失败，将在{random_relay // 60}分{random_relay % 60}秒后自动进行第{retry_times + 1}次重签"
         if matcher:
             await matcher.send(message)
         elif user.enable_notice:
