@@ -1,6 +1,7 @@
 import asyncio
 import threading
 import random
+import traceback
 from typing import Union, Optional, Iterable, Dict, Set, Type
 
 from nonebot import on_command, get_adapters
@@ -218,13 +219,14 @@ async def perform_game_sign(
     """
     执行游戏签到函数，并发送给用户签到消息。
 
-    :param user: 用户数据
-    :param user_ids: 发送通知的所有用户ID
+    :param user: 用户数据,qq号绑定信息list
+    :param user_ids: 发送通知的所有用户ID，qq号list
     :param matcher: 事件响应器
     :param event: 事件
     """
     failed_accounts = []
     for account in user.accounts.values():
+        # account：绑定信息的米游社账户
         # 自动签到时，要求用户打开了签到功能；手动签到时都可以调用执行。
         if not matcher and not account.enable_game_sign:
             continue
@@ -286,7 +288,7 @@ async def perform_game_sign(
                                    "请尝试使用命令『/账号设置』更改设备平台，若仍失败请手动前往米游社签到")
                     else:
                         message = f"⚠️账户 {account.display_name} 🎮『{signer.name}』签到失败，请稍后再试"
-                    failed_games.add(signer)
+                    failed_games.add(class_type)
                     if matcher:
                         await matcher.send(message)
                     elif user.enable_notice:
@@ -352,31 +354,35 @@ async def perform_game_sign(
                         message=f"⚠️您的米游社账户 {account.display_name} 下不存在任何游戏账号，已跳过签到"
                     )
 
+        # 增加签到失败后自动重试
+        try:
+            if failed_games and (retry_times < plugin_config.preference.sign_retry_times):
+                random_relay = random.randint(5 * 60, 30 * 60)
+                
+                need_resign_games = ''
+                if len(failed_games) > 1:
+                    for game in failed_games:
+                        need_resign_games = need_resign_games + game.name + '、'
+                    need_resign_games = need_resign_games[:-1]
+                else:
+                    need_resign_games = next(iter(failed_games)).name
+                message = f"⚠️账户 {account.display_name}下游戏 🎮『{need_resign_games}』签到失败，将在{random_relay // 60}分{random_relay % 60}秒后自动进行第{retry_times + 1}次重签"
+                if matcher:
+                    await matcher.send(message)
+                elif user.enable_notice:
+                    for user_id in user_ids:
+                        await send_private_msg(user_id=user_id, message=message)
+                await asyncio.sleep(random_relay)
+                await perform_game_sign(user = user, user_ids= [user_id], matcher= matcher, event= event, need_sign_games= failed_games, retry_times= retry_times + 1)
+        except :
+            logger.info(f"{plugin_config.preference.log_head}重签失败")
+            logger.info(traceback.format_exc())
     # 如果全部登录失效，则关闭通知
     if len(failed_accounts) == len(user.accounts):
         user.enable_notice = False
         PluginDataManager.write_plugin_data()
     
-    # 增加签到失败后自动重试
-    if failed_games and (retry_times < plugin_config.preference.sign_retry_times):
-        random_relay = random.randint(5 * 60, 30 * 60)
-        
-        need_resign_games = ''
-        if len(failed_games) > 1:
-            for game in failed_games:
-                need_resign_games = need_resign_games + game.name + '、'
-            need_resign_games = need_resign_games[:-1]
-        else:
-            need_resign_games = next(iter(failed_games)).name
-        message = f"⚠️账户 {account.display_name}下游戏 🎮『{need_resign_games}』签到失败，将在{random_relay // 60}分{random_relay % 60}秒后自动进行第{retry_times + 1}次重签"
-        if matcher:
-            await matcher.send(message)
-        elif user.enable_notice:
-            for user_id in user_ids:
-                await send_private_msg(user_id=user_id, message=message)
-        await asyncio.sleep(random_relay)
-        await perform_game_sign(user = user, user_ids= user_id, matcher= matcher, event= event, need_sign_games= failed_games, retry_times= retry_times + 1)
-
+ 
 
 async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Matcher = None):
     """
@@ -794,6 +800,10 @@ async def daily_schedule():
     """
     logger.info(f"{plugin_config.preference.log_head}开始执行每日自动任务")
     for user_id, user in get_unique_users():
+        # 这里的get_all_bind一直返回空，没啥作用
+        # 实际上，get_unique_users返回已绑定信息的键值对，{QQ号：对应绑定信息及设置}
+        # 具体参数可以看dataV2.json里的users参数，与get_unique_users返回是一样的
+        # user_id:qq号list   user:对应qq号绑定信息list
         user_ids = [user_id] + list(get_all_bind(user_id))
         await perform_game_sign(user=user, user_ids=user_ids)
         await perform_bbs_sign(user=user, user_ids=user_ids)
