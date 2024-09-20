@@ -421,12 +421,16 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
         myb_before_mission = missions_state.current_myb
 
         # 在此处进行判断。因为如果在多个分区执行任务，会在完成之前就已经达成米游币任务目标，导致其他分区任务不会执行。
-        finished = all(current == mission.threshold for mission, current in missions_state.state_dict.values())
-        if not finished:
+        # finished = all(current == mission.threshold for mission, current in missions_state.state_dict.values())
+        # 调整为：不符合完成条件的，才进行签到，否则不用签到
+        not_finished_missions = [(mission_name, mission) for mission_name, (mission, current) in missions_state.state_dict.items() if current != mission.threshold]
+        # if not finished:
+        if not_finished_missions:
             if not account.mission_games:
                 await matcher.send(
                     f'⚠️🆔账户 {account.display_name} 未设置米游币任务目标分区，将跳过执行')
             for class_name in account.mission_games:
+                # 这里account.mission_games默认只有BBSMission一个，所以这个循环只会执行一次
                 class_type = BaseMission.available_games.get(class_name)
                 if not class_type:
                     if matcher:
@@ -445,7 +449,7 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
                     MissionStatus()
                 )
                 sign_points: Optional[int] = None
-                for key_name in missions_state.state_dict:
+                for key_name, mission in not_finished_missions:
                     if key_name == BaseMission.SIGN:
                         sign_status, sign_points = await mission_obj.sign(user)
                     elif key_name == BaseMission.VIEW:
@@ -495,6 +499,9 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
 
             msg = f"{notice_string}" \
                   f"\n🆔账户 {account.display_name}"
+            
+            # 是否重新执行标记
+            repeat_flag = False
             for key_name, (mission, current) in missions_state.state_dict.items():
                 if key_name == BaseMission.SIGN:
                     mission_name = "📅签到"
@@ -506,15 +513,24 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
                     mission_name = "↗️分享"
                 else:
                     mission_name = mission.mission_key
-                msg += f"\n{mission_name}：{'✓' if current >= mission.threshold else '✕'}"
+                if current >= mission.threshold:
+                    msg += f"\n{mission_name}：✓"
+                else:
+                    msg += f"\n{mission_name}：✕"
+                    repeat_flag = True
             msg += f"\n🪙获得米游币: {missions_state.current_myb - myb_before_mission}" \
                    f"\n💰当前米游币: {missions_state.current_myb}"
 
+            random_relay = random.randint(3 * 60, 15 * 60)
+            msg += f"\n本次未全部签到成功，将于{random_relay // 60}分{random_relay % 60}秒后重新进行自动签到"
             if matcher:
                 await matcher.send(msg)
             else:
                 for user_id in user_ids:
                     await send_private_msg(user_id=user_id, message=msg)
+            
+            await asyncio.sleep(random_relay)
+            await perform_bbs_sign(user, user_ids, matcher)
 
     # 如果全部登录失效，则关闭通知
     if len(failed_accounts) == len(user.accounts):
