@@ -521,16 +521,18 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
             msg += f"\n🪙获得米游币: {missions_state.current_myb - myb_before_mission}" \
                    f"\n💰当前米游币: {missions_state.current_myb}"
 
-            random_relay = random.randint(3 * 60, 15 * 60)
-            msg += f"\n本次未全部签到成功，将于{random_relay // 60}分{random_relay % 60}秒后重新进行自动签到"
+            if repeat_flag:
+                random_relay = random.randint(3 * 60, 15 * 60)
+                msg += f"\n本次未全部签到成功，将于{random_relay // 60}分{random_relay % 60}秒后重新进行自动签到"
             if matcher:
                 await matcher.send(msg)
             else:
                 for user_id in user_ids:
                     await send_private_msg(user_id=user_id, message=msg)
             
-            await asyncio.sleep(random_relay)
-            await perform_bbs_sign(user, user_ids, matcher)
+            if repeat_flag:
+                await asyncio.sleep(random_relay)
+                await perform_bbs_sign(user, user_ids, matcher)
 
     # 如果全部登录失效，则关闭通知
     if len(failed_accounts) == len(user.accounts):
