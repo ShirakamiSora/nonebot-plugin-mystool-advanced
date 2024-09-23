@@ -7,15 +7,18 @@ import tenacity
 from ..api.common import ApiResultHandler, is_incorrect_return, create_verification, \
     verify_verification
 from ..model import BaseApiStatus, MissionStatus, MissionData, \
-    MissionState, UserAccount, plugin_config, plugin_env, UserData
+    MissionState, UserAccount, plugin_config, plugin_env, UserData, GenshinNote, GenshinNoteStatus
 from ..utils import logger, generate_ds, \
     get_async_retry, get_validate
+from ..api.common import genshin_note, get_game_record, starrail_note, get_mys_official_message, get_game_list
+from ..utils import generate_device_id, logger, generate_ds, \
+    get_async_retry, generate_seed_id, generate_fp_locally
 
 
 
 
 # 玩家原神账号信息,GET请求
-URL_GENSHIN_ACCOUNT_INFO = "https://api-takumi-record.mihoyo.com/game_record/app/genshin/api/index?avatar_list_type=1&server=cn_gf01&role_id={}"
+URL_GENSHIN_ACCOUNT_INFO = "https://api-takumi-record.mihoyo.com/game_record/app/genshin/api/index"
 # 玩家账号下原神角色信息,post
 URL_GENSHIN_ACCOUNT_CHARACTERS_INFO = "https://api-takumi-record.mihoyo.com/game_record/app/genshin/api/character/list"
 # 玩家单原神角色详细信息，包括圣遗物等,POST
@@ -28,52 +31,63 @@ class GenshinRequest:
     原神通用请求头
     """
     header = {
-        'Host': ' api-takumi-record.mihoyo.com',
-        'Connection': ' keep-alive',
-        'x-rpc-tool_verison': ' v5.0.1-ys',
+        'Host': 'api-takumi-record.mihoyo.com',
+        'Connection': 'keep-alive',
+        'x-rpc-tool_verison': 'v4.2.2-ys',
         'x-rpc-app_version': plugin_env.device_config.X_RPC_APP_VERSION,
-        'User-Agent': ' Mozilla/5.0 (Linux; Android 12; SDY-AN00 Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Safari/537.36 miHoYoBBS/2.75.2',
-        'Accept': ' application/json, text/plain, */*',
+        'Accept': 'application/json, text/plain, */*',
         'x-rpc-device_name': plugin_env.device_config.X_RPC_DEVICE_NAME_ANDROID,
-        'x-rpc-page': ' v5.0.1-ys_#/ys/role/all',
-        'x-rpc-sys_version': ' 12',
-        'x-rpc-client_type': ' 5',
-        'Origin': ' https://webstatic.mihoyo.com',
-        'X-Requested-With': ' com.mihoyo.hyperion',
-        'Sec-Fetch-Site': ' same-site',
-        'Sec-Fetch-Mode': ' cors',
-        'Sec-Fetch-Dest': ' empty',
-        'Referer': ' https://webstatic.mihoyo.com/',
-        'Accept-Language': ' zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Content-Type': ' application/json;charset=UTF-8'
+        'x-rpc-device_model':plugin_env.device_config.X_RPC_DEVICE_MODEL_ANDROID,
+        'x-rpc-page': 'v4.2.2-ys_#/ys',
+        'User-Agent':plugin_env.device_config.USER_AGENT_ANDROID,
+        'x-rpc-sys_version': '12',
+        'x-rpc-client_type': '5',
+        'Origin': 'https://webstatic.mihoyo.com',
+        'X-Requested-With': 'com.mihoyo.hyperion',
+        'Sec-Fetch-Site': 'same-site',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Dest': 'empty',
+        'Referer': 'https://webstatic.mihoyo.com/',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Content-Type': 'application/json;charset=UTF-8'
     }
 
     def __init__(self, account: UserAccount, **kwargs):
         self.header["x-rpc-device_id"] = account.device_id_android
+        self.account = account
         for k, v in kwargs:
             self.header[k] = v
         
     
-    def query(self, header, url, **kwargs):
+    async def query(self, header, url, method = 'GET', content=None, params=None, **kwargs):
         """
         通用查询
         ds:{
             参数类型:参数值
         }
         """
-        retrying = get_async_retry(retry)
+        retrying = get_async_retry(True)
         retrying.retry = retrying.retry and tenacity.retry_if_result(lambda x: x is None)
         try:
             async for attempt in retrying:
                 with attempt:
                     async with httpx.AsyncClient() as client:
-                        res = await client.post(
-                            url,
-                            headers=header,
-                            json=content,
-                            timeout=plugin_config.preference.timeout,
-                            cookies=self.account.cookies.dict(v2_stoken=True, cookie_type=True)
-                        )
+                        if method == 'GET':
+                            res = await client.get(
+                                url,
+                                headers=header,
+                                params=params,
+                                timeout=plugin_config.preference.timeout,
+                                cookies=self.account.cookies.dict(v2_stoken=True, cookie_type=True)
+                            )
+                        elif method == 'POST':
+                            res = await client.post(
+                                url,
+                                headers=header,
+                                json=content,
+                                timeout=plugin_config.preference.timeout,
+                                cookies=self.account.cookies.dict(v2_stoken=True, cookie_type=True)
+                            )
                     api_result = ApiResultHandler(res.json())
                     if api_result.login_expired:
                         logger.error(
@@ -89,23 +103,12 @@ class GenshinRequest:
                         logger.error(
                             f"通用查询: 用户 {self.account.display_name} 需要完成人机验证")
                         logger.debug(f"网络请求返回: {res.text}")
-                        if plugin_config.preference.geetest_url or user.geetest_url:
-                            create_status, mmt_data = await create_verification(self.account)
-                            if create_status:
-                                if geetest_result := await get_validate(user, mmt_data.gt, mmt_data.challenge):
-                                    if await verify_verification(mmt_data, geetest_result, self.account):
-                                        logger.success(
-                                            f"通用查询: 用户 {self.account.display_name} 人机验证通过")
-                                        continue
-                        else:
-                            logger.info(
-                                f"通用查询: 用户 {self.account.display_name} 未配置极验人机验证打码平台")
-                        return MissionStatus(need_verify=True), None
                     elif api_result.retcode == 1008:
                         logger.warning(
                             f"通用查询: 用户 {self.account.display_name} 今日已经签到过了")
                         logger.debug(f"网络请求返回: {res.text}")
                         return MissionStatus(success=True, already_signed=True), 0
+                    print(f'请求返回{api_result}')
                     return api_result.data
         except tenacity.RetryError as e:
             if is_incorrect_return(e):
@@ -118,11 +121,11 @@ class GenshinRequest:
 
 
 
-    def query_genshin_account_info(self, account):
+    async def query_genshin_account_info(self):
         """
         查询原神账号信息
         """
-
+        account = self.account
         game_record_status, records = await get_game_record(account)
         if not game_record_status:
             return GenshinNoteStatus(game_record_failed=True), None
@@ -135,21 +138,32 @@ class GenshinRequest:
             return GenshinNoteStatus(no_genshin_account=True), None
         else:
             game_id = game_info.id
-        flag = True
         for record in records:
             if record.game_id == game_id:
                 try:
-                    flag = False
                     params = {"role_id": record.game_role_id, "server": record.region}
-                    headers = HEADERS_GENSHIN_STATUS_BBS.copy()
+                    headers = self.header.copy()
                     headers["x-rpc-device_id"] = account.device_id_android
                     headers["x-rpc-device_fp"] = account.device_id_android or generate_fp_locally()
                     headers["DS"] = generate_ds(params={"role_id": record.game_role_id, "server": record.region})
-                    api_result = self.query(url=URL_GENSHIN_ACCOUNT_INFO, header=headers)
+                    api_result = await self.query(url=URL_GENSHIN_ACCOUNT_INFO, header=headers, method='GET', params=params)
+                    print(f'请求头为:{headers}, url:{URL_GENSHIN_ACCOUNT_INFO}, param:{params}')
+                    characters = [f"{x['actived_constellation_num']}命{x['rarity']}星{x['level']}级角色{x['name']}-好感{x['fetter']}\n" for x in api_result['avatars']]
+                    result = f"""
+                        "玩家基础信息":
+                            "玩家昵称":{api_result['role']['nickname']},
+                            "玩家账号的服务器名称":{api_result['role']['region']},
+                            "玩家的冒险等级":{api_result['role']['level']},
+                        "玩家拥有的角色的信息":{characters},
+                        "其他游戏信息":
+                            "活跃天数":{api_result['stats']['active_day_number']},
+                            "已有角色数量":{api_result['stats']['avatar_number']},
+                            "当前深渊层数":{api_result['stats']['spiral_abyss']}
+                    """
+                    return result
                 except tenacity.RetryError as e:
                     if is_incorrect_return(e):
                         logger.exception(f"原神实时便笺: 服务器没有正确返回")
-                        logger.debug(f"网络请求返回: {res.text}")
                     else:
                         logger.exception(f"原神实时便笺: 请求失败")
 

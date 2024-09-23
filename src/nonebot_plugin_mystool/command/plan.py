@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from ..api import BaseGameSign
 from ..api import BaseMission, get_missions_state
 from ..api.common import genshin_note, get_game_record, starrail_note, get_mys_official_message
+from ..api.mys_genshin import GenshinRequest
 from ..api.weibo import WeiboCode, WeiboSign
 from ..command.common import CommandRegistry
 from ..command.exchange import generate_image
@@ -901,3 +902,29 @@ async def auto_check_mys_official_message():
             await send_private_msg(user_id=usr, message=msg)
 
     logger.info(f"{plugin_config.preference.log_head}米游社官号消息检查完成")
+
+
+
+
+get_genshin_account_info = on_command(plugin_config.preference.command_start + '原神账号', priority=5, block=True)
+
+CommandRegistry.set_usage(
+    get_genshin_account_info,
+    CommandUsage(
+        name="原神账号",
+        description="手动查询原神账号信息"
+    )
+)
+
+
+@get_genshin_account_info.handle()
+async def _(event: Union[GeneralMessageEvent], matcher: Matcher, command_arg=CommandArg()):
+    user_id = event.get_user_id()
+    user = PluginDataManager.plugin_data.users.get(user_id)
+    if not user or not user.accounts:
+        await get_genshin_account_info.finish(f"⚠️你尚未绑定米游社账户，请先使用『{COMMAND_BEGIN}登录』进行登录")
+    for account in user.accounts.values():
+        genshin_request = GenshinRequest(account)
+        await get_genshin_account_info.send(f"正在查询账号{account.display_name}下原神信息")
+        result_str = await genshin_request.query_genshin_account_info()
+        await get_genshin_account_info.send(result_str)
