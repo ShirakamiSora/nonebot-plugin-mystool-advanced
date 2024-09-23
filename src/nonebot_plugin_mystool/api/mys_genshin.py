@@ -30,6 +30,7 @@ class GenshinRequest:
     """
     原神通用请求头
     """
+    """
     header = {
         'Host': 'api-takumi-record.mihoyo.com',
         'Connection': 'keep-alive',
@@ -51,6 +52,33 @@ class GenshinRequest:
         'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
         'Content-Type': 'application/json;charset=UTF-8'
     }
+    x-rpc-device_fp 不对，需要post：https://public-data-api.mihoyo.com/device-fp/api/getFp去获取
+    详细：https://github.com/UIGF-org/mihoyo-api-collect/blob/c1d92f10003f8842c2812ecaaccaae794024f288/hoyolab/login/password_hoyolab.md
+    """
+    header = {
+        'Host': 'api-takumi-record.mihoyo.com',
+        'Connection': 'keep-alive',
+        'x-rpc-tool_verison': 'v5.0.1-ys',
+        'x-rpc-app_version': "2.75.2",
+        'Accept': 'application/json, text/plain, */*',
+        'x-rpc-device_name': 'HONOR%20SDY-AN00',
+        'x-rpc-device_id':'e12a76c9-47c0-3dfc-ab91-dad20b0d77a1',
+        'x-rpc-page': 'v5.0.1-ys_#/ys',
+        'x-rpc-device_fp':'38d7fea11fc30',
+        'User-Agent':'Mozilla/5.0 (Linux; Android 12; SDY-AN00 Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Safari/537.36 miHoYoBBS/2.75.2',
+        'x-rpc-sys_version': '12',
+        'x-rpc-client_type': '5',
+        'Origin': 'https://webstatic.mihoyo.com',
+        'X-Requested-With': 'com.mihoyo.hyperion',
+        'Sec-Fetch-Site': 'same-site',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Dest': 'empty',
+        'Referer': 'https://webstatic.mihoyo.com/',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Content-Type': 'application/json;charset=UTF-8',
+        'Accept-Encoding':'gzip, deflate'
+    }
+    
 
     def __init__(self, account: UserAccount, **kwargs):
         self.header["x-rpc-device_id"] = account.device_id_android
@@ -68,6 +96,7 @@ class GenshinRequest:
         """
         retrying = get_async_retry(True)
         retrying.retry = retrying.retry and tenacity.retry_if_result(lambda x: x is None)
+        print(f'cookie为:{self.account.cookies.dict(v2_stoken=True, cookie_type=True)}')
         try:
             async for attempt in retrying:
                 with attempt:
@@ -141,11 +170,11 @@ class GenshinRequest:
         for record in records:
             if record.game_id == game_id:
                 try:
-                    params = {"role_id": record.game_role_id, "server": record.region}
+                    params = {"role_id": record.game_role_id, "server": record.region, "avatar_list_type":"1"}
                     headers = self.header.copy()
-                    headers["x-rpc-device_id"] = account.device_id_android
-                    headers["x-rpc-device_fp"] = account.device_id_android or generate_fp_locally()
-                    headers["DS"] = generate_ds(params={"role_id": record.game_role_id, "server": record.region})
+                    # headers["x-rpc-device_id"] = account.device_id_android
+                    # headers["x-rpc-device_fp"] = account.device_id_android or generate_fp_locally()
+                    # headers["DS"] = generate_ds(params=params)
                     api_result = await self.query(url=URL_GENSHIN_ACCOUNT_INFO, header=headers, method='GET', params=params)
                     print(f'请求头为:{headers}, url:{URL_GENSHIN_ACCOUNT_INFO}, param:{params}')
                     characters = [f"{x['actived_constellation_num']}命{x['rarity']}星{x['level']}级角色{x['name']}-好感{x['fetter']}\n" for x in api_result['avatars']]
