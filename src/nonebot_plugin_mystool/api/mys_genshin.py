@@ -30,17 +30,17 @@ class GenshinRequest:
     """
     原神通用请求头
     """
-    """
+    
     header = {
         'Host': 'api-takumi-record.mihoyo.com',
         'Connection': 'keep-alive',
         'x-rpc-tool_verison': 'v4.2.2-ys',
         'x-rpc-app_version': plugin_env.device_config.X_RPC_APP_VERSION,
         'Accept': 'application/json, text/plain, */*',
-        'x-rpc-device_name': plugin_env.device_config.X_RPC_DEVICE_NAME_ANDROID,
-        'x-rpc-device_model':plugin_env.device_config.X_RPC_DEVICE_MODEL_ANDROID,
+        'x-rpc-device_name': plugin_env.device_config.X_RPC_DEVICE_NAME_MOBILE,
+        'x-rpc-device_model':plugin_env.device_config.X_RPC_DEVICE_MODEL_MOBILE,
         'x-rpc-page': 'v4.2.2-ys_#/ys',
-        'User-Agent':plugin_env.device_config.USER_AGENT_ANDROID,
+        'User-Agent':plugin_env.device_config.USER_AGENT_MOBILE,
         'x-rpc-sys_version': '12',
         'x-rpc-client_type': '5',
         'Origin': 'https://webstatic.mihoyo.com',
@@ -52,9 +52,11 @@ class GenshinRequest:
         'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
         'Content-Type': 'application/json;charset=UTF-8'
     }
+
+    """
     x-rpc-device_fp 不对，需要post：https://public-data-api.mihoyo.com/device-fp/api/getFp去获取
     详细：https://github.com/UIGF-org/mihoyo-api-collect/blob/c1d92f10003f8842c2812ecaaccaae794024f288/hoyolab/login/password_hoyolab.md
-    """
+    
     header = {
         'Host': 'api-takumi-record.mihoyo.com',
         'Connection': 'keep-alive',
@@ -78,10 +80,11 @@ class GenshinRequest:
         'Content-Type': 'application/json;charset=UTF-8',
         'Accept-Encoding':'gzip, deflate'
     }
+    """
     
 
     def __init__(self, account: UserAccount, **kwargs):
-        self.header["x-rpc-device_id"] = account.device_id_android
+        self.header["x-rpc-device_id"] = account.device_id_ios
         self.account = account
         for k, v in kwargs:
             self.header[k] = v
@@ -172,9 +175,9 @@ class GenshinRequest:
                 try:
                     params = {"role_id": record.game_role_id, "server": record.region, "avatar_list_type":"1"}
                     headers = self.header.copy()
-                    # headers["x-rpc-device_id"] = account.device_id_android
-                    # headers["x-rpc-device_fp"] = account.device_id_android or generate_fp_locally()
-                    # headers["DS"] = generate_ds(params=params)
+                    headers["x-rpc-device_id"] = account.device_id_ios.lower()
+                    headers["x-rpc-device_fp"] = account.device_fp or generate_fp_locally()
+                    headers["DS"] = generate_ds(params=params)
                     api_result = await self.query(url=URL_GENSHIN_ACCOUNT_INFO, header=headers, method='GET', params=params)
                     print(f'请求头为:{headers}, url:{URL_GENSHIN_ACCOUNT_INFO}, param:{params}')
                     characters = [f"{x['actived_constellation_num']}命{x['rarity']}星{x['level']}级角色{x['name']}-好感{x['fetter']}\n" for x in api_result['avatars']]
