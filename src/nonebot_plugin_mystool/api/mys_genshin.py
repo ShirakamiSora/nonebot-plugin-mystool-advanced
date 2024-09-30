@@ -218,6 +218,20 @@ class GenshinRequest:
         """
         查询账号下角色信息
         """
+        account = self.account
+        record = await self.get_genshin_account()
+        try:
+            content = {"role_id": record.game_role_id, "server": record.region, "sort_type":"1"}
+            headers = self.header.copy()
+            headers["x-rpc-device_id"] = account.device_id_ios.lower()
+            headers["x-rpc-device_fp"] = account.device_fp or generate_fp_locally()
+            headers["DS"] = generate_ds(data=content)
+            api_result = await self.query(url=URL_GENSHIN_ACCOUNT_CHARACTERS_INFO, header=headers, method='POST', content=content)
+            character_0 = api_result['list'][0]
+            result = f'第一个角色信息为:id{character_0['id']},角色姓名:{character_0['name']},等级:{character_0['level']}'
+            return result
+        except:
+            logger.exception(f'查询账号角色信息失败')
 
     
     async def query_genshin_character_detail_info(self):
