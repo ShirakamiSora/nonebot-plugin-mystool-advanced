@@ -52,18 +52,20 @@ class GenshinRequest:
         'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
         'Content-Type': 'application/json;charset=UTF-8'
     }
-
     """
+    'x-rpc-device_name': 'HONOR%20SDY-AN00',
+    'x-rpc-device_id':'e12a76c9-47c0-3dfc-ab91-dad20b0d77a1',
     x-rpc-device_fp 不对，需要post：https://public-data-api.mihoyo.com/device-fp/api/getFp去获取
     详细：https://github.com/UIGF-org/mihoyo-api-collect/blob/c1d92f10003f8842c2812ecaaccaae794024f288/hoyolab/login/password_hoyolab.md
     
+
     header = {
         'Host': 'api-takumi-record.mihoyo.com',
         'Connection': 'keep-alive',
         'x-rpc-tool_verison': 'v5.0.1-ys',
         'x-rpc-app_version': "2.75.2",
         'Accept': 'application/json, text/plain, */*',
-        'x-rpc-device_name': 'HONOR%20SDY-AN00',
+        'x-rpc-device_name': 'iPhone',
         'x-rpc-device_id':'e12a76c9-47c0-3dfc-ab91-dad20b0d77a1',
         'x-rpc-page': 'v5.0.1-ys_#/ys',
         'x-rpc-device_fp':'38d7fea11fc30',
@@ -89,6 +91,31 @@ class GenshinRequest:
         for k, v in kwargs:
             self.header[k] = v
         
+    
+    async def get_genshin_account(self):
+        """
+        获取账号原神相关信息
+        """
+        account = self.account
+        game_record_status, records = await get_game_record(account)
+        if not game_record_status:
+            logger.info(f'获取米游社账号{account.display_name}游戏信息失败')
+            return
+        game_list_status, game_list = await get_game_list()
+        if not game_list_status:
+            logger.info(f'获取米游社账号{account.display_name}游戏列表失败')
+            return 
+        genshin_game_info = [x for x in game_list if x.en_name == 'ys'][0]
+        # game_filter = filter(lambda x: x.en_name == 'ys', game_list)
+        # game_info = next(game_filter, None)
+
+        if not genshin_game_info:
+            logger.info(f'获取米游社账号{account.display_name}下原神账号失败，可能是没有账号')
+            return 
+        else:
+            game_id = genshin_game_info.id
+        return [x for x in records if x.game_id == game_id][0]
+
     
     async def query(self, header, url, method = 'GET', content=None, params=None, **kwargs):
         """
@@ -158,48 +185,45 @@ class GenshinRequest:
         查询原神账号信息
         """
         account = self.account
-        game_record_status, records = await get_game_record(account)
-        if not game_record_status:
-            return GenshinNoteStatus(game_record_failed=True), None
-        game_list_status, game_list = await get_game_list()
-        if not game_list_status:
-            return GenshinNoteStatus(game_list_failed=True), None
-        game_filter = filter(lambda x: x.en_name == 'ys', game_list)
-        game_info = next(game_filter, None)
-        if not game_info:
-            return GenshinNoteStatus(no_genshin_account=True), None
-        else:
-            game_id = game_info.id
-        for record in records:
-            if record.game_id == game_id:
-                try:
-                    params = {"role_id": record.game_role_id, "server": record.region, "avatar_list_type":"1"}
-                    headers = self.header.copy()
-                    headers["x-rpc-device_id"] = account.device_id_ios.lower()
-                    headers["x-rpc-device_fp"] = account.device_fp or generate_fp_locally()
-                    headers["DS"] = generate_ds(params=params)
-                    api_result = await self.query(url=URL_GENSHIN_ACCOUNT_INFO, header=headers, method='GET', params=params)
-                    print(f'请求头为:{headers}, url:{URL_GENSHIN_ACCOUNT_INFO}, param:{params}')
-                    characters = [f"{x['actived_constellation_num']}命{x['rarity']}星{x['level']}级角色{x['name']}-好感{x['fetter']}\n" for x in api_result['avatars']]
-                    result = f"""
-                        "玩家基础信息":
-                            "玩家昵称":{api_result['role']['nickname']},
-                            "玩家账号的服务器名称":{api_result['role']['region']},
-                            "玩家的冒险等级":{api_result['role']['level']},
-                        "玩家拥有的角色的信息":{characters},
-                        "其他游戏信息":
-                            "活跃天数":{api_result['stats']['active_day_number']},
-                            "已有角色数量":{api_result['stats']['avatar_number']},
-                            "当前深渊层数":{api_result['stats']['spiral_abyss']}
-                    """
-                    return result
-                except tenacity.RetryError as e:
-                    if is_incorrect_return(e):
-                        logger.exception(f"原神实时便笺: 服务器没有正确返回")
-                    else:
-                        logger.exception(f"原神实时便笺: 请求失败")
+        record = await self.get_genshin_account()
+        try:
+            params = {"role_id": record.game_role_id, "server": record.region, "avatar_list_type":"1"}
+            headers = self.header.copy()
+            headers["x-rpc-device_id"] = account.device_id_ios.lower()
+            headers["x-rpc-device_fp"] = account.device_fp or generate_fp_locally()
+            headers["DS"] = generate_ds(params=params)
+            api_result = await self.query(url=URL_GENSHIN_ACCOUNT_INFO, header=headers, method='GET', params=params)
+            print(f'请求头为:{headers}, url:{URL_GENSHIN_ACCOUNT_INFO}, param:{params}')
+            characters = [f"{x['actived_constellation_num']}命{x['rarity']}星{x['level']}级角色{x['name']}-好感{x['fetter']}\n" for x in api_result['avatars']]
+            result = f"""
+                "玩家基础信息":
+                    "玩家昵称":{api_result['role']['nickname']},
+                    "玩家账号的服务器名称":{api_result['role']['region']},
+                    "玩家的冒险等级":{api_result['role']['level']},
+                "玩家拥有的角色的信息":{characters},
+                "其他游戏信息":
+                    "活跃天数":{api_result['stats']['active_day_number']},
+                    "已有角色数量":{api_result['stats']['avatar_number']},
+                    "当前深渊层数":{api_result['stats']['spiral_abyss']}
+            """
+            return result
+        except tenacity.RetryError as e:
+            if is_incorrect_return(e):
+                logger.exception(f"原神实时便笺: 服务器没有正确返回")
+            else:
+                logger.exception(f"原神实时便笺: 请求失败")
 
 
+    async def query_genshin_account_characters_info(self):
+        """
+        查询账号下角色信息
+        """
+
+    
+    async def query_genshin_character_detail_info(self):
+        """
+        查询账号下角色详细信息，包括圣遗物等
+        """
 
 
 
