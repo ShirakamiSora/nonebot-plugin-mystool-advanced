@@ -228,7 +228,7 @@ class GenshinRequest:
             headers["DS"] = generate_ds(data=content)
             api_result = await self.query(url=URL_GENSHIN_ACCOUNT_CHARACTERS_INFO, header=headers, method='POST', content=content)
             character_0 = api_result['list'][0]
-            result = f'第一个角色信息为:id{character_0['id']},角色姓名:{character_0['name']},等级:{character_0['level']}'
+            result = f"第一个角色信息为:id{character_0['id']},角色姓名:{character_0['name']},等级:{character_0['level']}"
             return result
         except:
             logger.exception(f'查询账号角色信息失败')

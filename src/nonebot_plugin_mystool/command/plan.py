@@ -928,3 +928,28 @@ async def _(event: Union[GeneralMessageEvent], matcher: Matcher, command_arg=Com
         await get_genshin_account_info.send(f"正在查询账号{account.display_name}下原神信息")
         result_str = await genshin_request.query_genshin_account_info()
         await get_genshin_account_info.send(result_str)
+
+
+
+genshin_new_api_debug = on_command(plugin_config.preference.command_start + '原神测试功能', priority=5, block=True)
+
+CommandRegistry.set_usage(
+    genshin_new_api_debug,
+    CommandUsage(
+        name="原神测试功能",
+        description="手动查询原神账号信息"
+    )
+)
+
+
+@genshin_new_api_debug.handle()
+async def _(event: Union[GeneralMessageEvent], matcher: Matcher, command_arg=CommandArg()):
+    user_id = event.get_user_id()
+    user = PluginDataManager.plugin_data.users.get(user_id)
+    if not user or not user.accounts:
+        await genshin_new_api_debug.finish(f"⚠️你尚未绑定米游社账户，请先使用『{COMMAND_BEGIN}登录』进行登录")
+    for account in user.accounts.values():
+        genshin_request = GenshinRequest(account)
+        await genshin_new_api_debug.send(f"正在查询账号{account.display_name}下原神信息")
+        result_str = await genshin_request.query_genshin_account_characters_info()
+        await genshin_new_api_debug.send(result_str)
