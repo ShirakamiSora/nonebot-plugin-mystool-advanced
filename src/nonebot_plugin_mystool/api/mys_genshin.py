@@ -7,7 +7,7 @@ import tenacity
 from ..api.common import ApiResultHandler, is_incorrect_return, create_verification, \
     verify_verification
 from ..model import BaseApiStatus, MissionStatus, MissionData, \
-    MissionState, UserAccount, plugin_config, plugin_env, UserData, GenshinNote, GenshinNoteStatus
+    MissionState, UserAccount, plugin_config, plugin_env, UserData, GenshinNote, GenshinNoteStatus, data_path
 from ..utils import logger, generate_ds, \
     get_async_retry, get_validate
 from ..api.common import genshin_note, get_game_record, starrail_note, get_mys_official_message, get_game_list
@@ -233,11 +233,46 @@ class GenshinRequest:
         except:
             logger.exception(f'查询账号角色信息失败')
 
+
+    def character_name_to_id(self, character_names:list[str]) -> list[str]:
+        """
+        将传入的角色名称转换为对应的id
+        """
+        import json
+        try:
+            items_id_path = data_path / "items_id.json"
+            with open(items_id_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+        except:
+            logger.debug(f'读取item_id.json文件失败')
+
+        return [str(data[c]) if c in data else '' for c in character_names ]
     
-    async def query_genshin_character_detail_info(self):
+    async def query_genshin_character_detail_info(self, character_names:list[str] = []):
         """
         查询账号下角色详细信息，包括圣遗物等
+        调整参数可以用来查询多个角色
         """
+        if not character_names:
+            return f'未传入角色'
+        character_ids = self.character_name_to_id(character_names)
+        for c in character_ids:
+            if not c:
+                return f'传入的角色中有未查询到的角色，请核实角色名称'
+        account = self.account
+        record = await self.get_genshin_account()
+        try:
+            content = {"role_id": record.game_role_id, "server": record.region, "character_ids":character_ids}
+            headers = self.header.copy()
+            headers["x-rpc-device_id"] = account.device_id_ios.lower()
+            headers["x-rpc-device_fp"] = account.device_fp or generate_fp_locally()
+            headers["DS"] = generate_ds(data=content)
+            api_result = await self.query(url=URL_GENSHIN_ACCOUNT_CHARACTER_DETAIL, header=headers, method='POST', content=content)
+            character_0 = api_result['list'][0]
+            result = f"第一个角色信息为:id{character_0['base']['id']},角色姓名:{character_0['base']['name']},等级:{character_0['base']['level']}"
+            return result
+        except:
+            logger.exception(f'查询账号角色信息失败')
 
 
 

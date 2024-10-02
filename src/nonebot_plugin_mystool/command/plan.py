@@ -946,10 +946,13 @@ CommandRegistry.set_usage(
 async def _(event: Union[GeneralMessageEvent], matcher: Matcher, command_arg=CommandArg()):
     user_id = event.get_user_id()
     user = PluginDataManager.plugin_data.users.get(user_id)
+    if not command_arg:
+        await genshin_new_api_debug.finish(f'未获取到查询角色参数')
+    character_name = str(command_arg)
     if not user or not user.accounts:
         await genshin_new_api_debug.finish(f"⚠️你尚未绑定米游社账户，请先使用『{COMMAND_BEGIN}登录』进行登录")
     for account in user.accounts.values():
         genshin_request = GenshinRequest(account)
         await genshin_new_api_debug.send(f"正在查询账号{account.display_name}下原神信息")
-        result_str = await genshin_request.query_genshin_account_characters_info()
+        result_str = await genshin_request.query_genshin_character_detail_info([character_name])
         await genshin_new_api_debug.send(result_str)
