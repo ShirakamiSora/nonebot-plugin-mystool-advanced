@@ -4,6 +4,10 @@ from typing import List, Optional, Tuple, Type, Dict
 import httpx
 import tenacity
 
+from nonebot import require
+require("nonebot_plugin_htmlrender")
+from nonebot_plugin_htmlrender import html_to_pic, get_new_page
+
 from ..api.common import ApiResultHandler, is_incorrect_return, create_verification, \
     verify_verification
 from ..model import BaseApiStatus, MissionStatus, MissionData, \
@@ -12,7 +16,7 @@ from ..utils import logger, generate_ds, \
     get_async_retry, get_validate
 from ..api.common import genshin_note, get_game_record, starrail_note, get_mys_official_message, get_game_list
 from ..utils import generate_device_id, logger, generate_ds, \
-    get_async_retry, generate_seed_id, generate_fp_locally
+    get_async_retry, generate_seed_id, generate_fp_locally, html2img
 
 
 
@@ -274,6 +278,18 @@ class GenshinRequest:
         except:
             logger.exception(f'查询账号角色信息失败')
 
+
+    async def generate_character_pic(self) -> bytes:
+        """
+        利用获取到的角色数据生成图片,先传默认
+        """
+        path = 'file://' / data_path / "genshin_template/template.html"
+        path = path.as_uri()
+        logger.debug(f'html路径:{path}')
+        async with get_new_page() as page:
+            await page.goto(path)
+            pic = await page.screenshot(full_page=True)
+        return pic
 
 
     

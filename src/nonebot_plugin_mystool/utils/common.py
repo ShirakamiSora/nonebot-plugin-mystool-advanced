@@ -43,7 +43,7 @@ __all__ = ["GeneralMessageEvent", "GeneralPrivateMessageEvent", "GeneralGroupMes
            "get_async_retry", "generate_device_id", "cookie_str_to_dict", "cookie_dict_to_str", "generate_ds",
            "get_validate", "generate_seed_id", "generate_fp_locally", "get_file", "blur_phone", "generate_qr_img",
            "send_private_msg", "send_group_msg", "wrap_and_forward_message", "get_unique_users", "get_all_bind", "read_blacklist", "read_whitelist",
-           "read_admin_list"]
+           "read_admin_list", "html2img"]
 
 # 启用 nonebot-plugin-send-anything-anywhere 的自动选择 Bot 功能
 enable_auto_select_bot()
@@ -522,3 +522,11 @@ def read_admin_list() -> List[str]:
     """
     return _read_user_list(
         plugin_config.preference.admin_list_path) if plugin_config.preference.enable_admin_list else []
+
+
+async def html2img(html_url):
+    """
+    使用html模板生成图片
+    """
+    return 
+    
