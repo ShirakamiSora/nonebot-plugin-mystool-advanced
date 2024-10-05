@@ -125,18 +125,29 @@ li {
     /* height: 60%; */
 }
 
-.character_skill ul{
+.character_skill ul {
     display: flex;
-    flex-direction: row;
-    justify-content: space-around;
+    flex-wrap: wrap; /* 允许换行 */
 }
 
 .character_skill ul li {
+    flex: 1; /* 自动均匀分配宽度 */
+    /* max-width: calc(100% / 5); 根据需要设置每行最多展示5个,好像没啥用 */
+    height: 150px; /* 设定统一的高度 */
     display: flex;
-    flex-direction: column; 
-    width: 100px;
-    text-align: center;
-    gap: 5px;
+    flex-direction: column; /* 竖向排列 */
+    overflow: hidden; /* 隐藏溢出部分 */
+}
+
+.character_skill ul li img {
+    max-width: 100%; /* 限制图片最大宽度 */
+    max-height: 100px; /* 限制图片最大高度 */
+    object-fit: contain; /* 保持比例，居中显示 */
+}
+
+.character_skill ul li span {
+    text-align: center; /* 文字居中 */
+    margin-top: 5px; /* 与图片的间距 */
 }
 
 .middle {
@@ -168,41 +179,53 @@ li {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.character_base_properties .row {
+.character_base_properties .properties {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.character_base_properties .properties .one_property {
+    width: 50%; /* 每行两个卡片 */
+    /* background-color: rgba(36, 67, 132, 0.3); */
+    box-sizing: border-box;
+    /* border: 1px solid rgba(255, 255, 255, 0.1); 卡片样式 */
+    padding: 10px 15px;
+    /* border-radius: 10px; */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.character_base_properties .properties .one_property:nth-last-child(1),
+.character_base_properties .properties .one_property:nth-last-child(2) {
+    border-bottom: none;
+}
+
+.character_base_properties .properties .one_property:nth-child(odd) {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.character_base_properties .properties .one_property .icon_name {
+    width: 50%;
+}
+
+.character_base_properties .properties .one_property .sum {
+    margin-left: auto;
+}
+
+.character_base_properties .properties .one_property .calute {
+    margin-left: auto;
+    margin-right: auto;
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
 }
 
-.character_base_properties .row ul:nth-child(odd) {
-    background-color: #293663;
+.character_base_properties .properties .one_property .calute .add {
+    color: #6af1fd;
 }
-
-.character_base_properties .row ul:nth-child(even) {
-    background-color: #313e6b;
-}
-
-.character_base_properties .row > ul {
-    display: flex;
-    flex-direction: row;
-}
-
-.character_base_properties .row > ul li {
-    /* width: 45%; */
-    width: 50%;
-    display: flex;
-    flex-direction: row;
-    padding: 5px;
-    justify-content: space-between;
-}
-
-
-.character_base_properties .row > ul li div {
-    justify-content: space-between;
-}
-
-/* .character_base_properties .row > ul li .sum {
-    margin-left: auto;
-} */
 
 .character_weapon {
     display: flex;

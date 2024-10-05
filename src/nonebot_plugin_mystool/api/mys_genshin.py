@@ -271,6 +271,7 @@ class GenshinRequest:
             headers["x-rpc-device_id"] = account.device_id_ios.lower()
             headers["x-rpc-device_fp"] = account.device_fp or generate_fp_locally()
             headers["DS"] = generate_ds(data=content)
+            # logger.debug(f'传入的content为:{content}\n传入的header为:{headers}\n')
             api_result = await self.query(url=URL_GENSHIN_ACCOUNT_CHARACTER_DETAIL, header=headers, method='POST', content=content)
             character_0 = api_result['list'][0]
             property_map = api_result['property_map']
@@ -295,6 +296,22 @@ class GenshinRequest:
         # 角色元素图标,先不传，没找到链接
         # character_element_img_dir = str(data_path) + f'genshin_template/data/element'
         # local_character_element_img_link = await get_local_images([character_info['base']['image']], character_bgp_dir)
+
+        # 角色属性
+        # 一共28条属性，5+7+16
+        all_properties = character_info['base_properties'] + character_info['extra_properties'] + character_info['element_properties']
+
+        character_properties = {
+            str(x['property_type']):x for x in all_properties
+        }
+        character_properties_icon_dir = data_path / f'genshin_template/data/charatcer_properties'
+        for k, v in character_properties.items():
+            character_properties[k]['name'] = property_map.get(k)['name']
+            # 直接转成本地绝对路径了
+            character_properties[k]['icon'] = await get_local_images([property_map.get(k)['icon']], character_properties_icon_dir)
+            character_properties[k]['icon'] = character_properties[k]['icon'][0]
+            # logger.debug(f"属性图片本地绝对路径：{character_properties[k]['icon']}")
+            
 
         # 角色技能图标
         character_skill_img_dir = data_path / f'genshin_template/data/{character_id}/skill'
@@ -343,7 +360,8 @@ class GenshinRequest:
             "character":character_info['base'],
             "weapon_img":local_weapon_img_link,
             "weapon":character_info['weapon'],
-            "relics":relics
+            "relics":relics,
+            "character_properties":character_properties
         }
 
         return await self.genshin_generate_character_pic(res)

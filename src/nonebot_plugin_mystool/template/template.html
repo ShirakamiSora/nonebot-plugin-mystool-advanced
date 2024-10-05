@@ -57,101 +57,26 @@
     <div class="middle">
         <div class="character_base_properties">
             <span class="title">角色属性</span>
-            <ul class="row">
-                <!-- 这里先不调整 -->
-                <ul>
-                    <!-- {% for properties_img, properties_name, add, final in properties %} -->
-                    <!-- <li>
+            <div class="properties">
+                {% for k, property in character_properties.items() %}
+                    <div class="one_property">
                         <div class="icon_name">
-                            <img src="" alt="">
-                            <span>{{ properties_name }}</span>
+                            <img src="{{ property.icon }}" alt="">
+                            <span>{{ property.name }}</span>
                         </div>
-                        <div class="calute">{{ add }}</div>
-                        <div class="sum">{{ final }}</div>
-                    </li> -->
-                    <!-- {% endfor %} -->
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>暴击率</span>
+                        <div class="calute">
+                            {% if property.add %}
+                                <div class="base">{{ property.base }}</div>
+                                <div class="add">+{{ property.add }}</div>
+                            {% else %}
+                                <div class="base"></div>
+                                <div class="add"></div>
+                            {% endif %}
                         </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                </ul>
-                <ul>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>攻击力</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>暴击伤害</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                </ul>
-                <ul>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>防御力</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>治疗加成</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                </ul>
-                <ul>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>元素精通</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>受治疗加成</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                </ul>
-                <ul>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>风元素伤害加成</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                    <li>
-                        <div class="icon_name">
-                            <img src="" alt="">
-                            <span>元素充能效率</span>
-                        </div>
-                        <div class="calute">123</div>
-                        <div class="sum">1234</div>
-                    </li>
-                </ul>
-            </ul>
+                        <div class="sum">{{ property.final }}</div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
         
     </div>

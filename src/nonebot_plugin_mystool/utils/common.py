@@ -532,6 +532,9 @@ async def html2img(html_url):
     
 
 async def get_local_images(image_urls:list[str], save_dir:Path):
+    """
+    将网络图片链接转换成本地绝对路径
+    """
     local_links = []
     
     if not os.path.exists(save_dir):
