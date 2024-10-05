@@ -6,7 +6,7 @@ import tenacity
 
 from nonebot import require
 require("nonebot_plugin_htmlrender")
-from nonebot_plugin_htmlrender import html_to_pic, get_new_page
+from nonebot_plugin_htmlrender import html_to_pic, get_new_page, template_to_pic
 
 from ..api.common import ApiResultHandler, is_incorrect_return, create_verification, \
     verify_verification
@@ -16,7 +16,7 @@ from ..utils import logger, generate_ds, \
     get_async_retry, get_validate
 from ..api.common import genshin_note, get_game_record, starrail_note, get_mys_official_message, get_game_list
 from ..utils import generate_device_id, logger, generate_ds, \
-    get_async_retry, generate_seed_id, generate_fp_locally, html2img
+    get_async_retry, generate_seed_id, generate_fp_locally, html2img, get_local_images
 
 
 
@@ -273,23 +273,110 @@ class GenshinRequest:
             headers["DS"] = generate_ds(data=content)
             api_result = await self.query(url=URL_GENSHIN_ACCOUNT_CHARACTER_DETAIL, header=headers, method='POST', content=content)
             character_0 = api_result['list'][0]
-            result = f"第一个角色信息为:id{character_0['base']['id']},角色姓名:{character_0['base']['name']},等级:{character_0['base']['level']}"
-            return result
+            property_map = api_result['property_map']
+            # result = f"第一个角色信息为:id{character_0['base']['id']},角色姓名:{character_0['base']['name']},等级:{character_0['base']['level']}"
+            return character_0, property_map
         except:
             logger.exception(f'查询账号角色信息失败')
 
 
-    async def generate_character_pic(self) -> bytes:
+    async def get_one_character_info_by_pic(self, character_name:str) -> bytes:
+        """
+        查询单个角色信息并转换成图片形式
+        返回图片字节流
+        """
+        character_info, property_map = await self.query_genshin_character_detail_info([character_name])
+        character_id = character_info['base']['id']
+        # 先将所有图片转换成本地路径
+        # 角色背景图
+        character_bgp_dir = data_path / f"genshin_template/data/{character_id}"
+        local_character_bgp_link = await get_local_images([character_info['base']['image']], character_bgp_dir)
+        local_character_bgp_link = local_character_bgp_link[0]
+        # 角色元素图标,先不传，没找到链接
+        # character_element_img_dir = str(data_path) + f'genshin_template/data/element'
+        # local_character_element_img_link = await get_local_images([character_info['base']['image']], character_bgp_dir)
+
+        # 角色技能图标
+        character_skill_img_dir = data_path / f'genshin_template/data/{character_id}/skill'
+        c_skills_icon = [x['icon'] for x in character_info['skills']]
+        local_character_skill_img_link = await get_local_images(c_skills_icon, character_skill_img_dir)
+        character_skills = [{"name":x['name'], "img":local_character_skill_img_link[i]} for i, x in enumerate(character_info['skills'])]
+        
+        # 武器图标
+        weapon_img_dir = data_path / f'genshin_template/data/weapon'
+        local_weapon_img_link = await get_local_images([character_info['weapon']['icon']], weapon_img_dir)
+        local_weapon_img_link = local_weapon_img_link[0]
+        
+        # 圣遗物
+        relic_img_dir = data_path / f'genshin_template/data/relics'
+        relics_icon = [x['icon'] for x in character_info['relics']]
+        local_relic_img_link = await get_local_images(relics_icon, relic_img_dir)
+        character_info['weapon']['main_property_name'] = property_map.get(str(character_info['weapon']['main_property']['property_type']))['name']
+        character_info['weapon']['sub_property_name'] = property_map.get(str(character_info['weapon']['sub_property']['property_type']))['name']
+        # 将全部的信息做整理，只传递有用到的
+        relics = []
+        for i, relic in enumerate(character_info['relics']):
+            relics.append({
+                "info":{
+                    "name":relic['name'],
+                    "level":relic['level'],
+                    "img":local_relic_img_link[i]
+                },
+                "main":{
+                    "name":property_map.get(str(relic['main_property']['property_type']))['name'],
+                    "value":relic['main_property']['value']
+                },
+                "sub":[
+                    {
+                        "name":property_map.get(str(sub['property_type']))['name'],
+                        "value":sub['value'],
+                        "times":sub['times']
+                    }
+                    for sub in relic['sub_property_list']
+                ]
+            })
+        
+        res = {
+            "character_bg":local_character_bgp_link,
+            "charatcer_element":'',
+            "character_skills":character_skills,
+            "character":character_info['base'],
+            "weapon_img":local_weapon_img_link,
+            "weapon":character_info['weapon'],
+            "relics":relics
+        }
+
+        return await self.genshin_generate_character_pic(res)
+
+    async def genshin_generate_character_pic(self, content:dict) -> bytes:
         """
         利用获取到的角色数据生成图片,先传默认
         """
-        path = 'file://' / data_path / "genshin_template/template.html"
-        path = path.as_uri()
-        logger.debug(f'html路径:{path}')
-        async with get_new_page() as page:
-            await page.goto(path)
-            pic = await page.screenshot(full_page=True)
+        # path = data_path / "genshin_template/template.html"
+        # path = path.as_uri()
+        from pathlib import Path
+        # 获取当前脚本的父文件夹
+        parent_dir = Path(__file__).parent.parent
+
+        # 获取同级文件夹（例如data）中的文件
+        file_path = parent_dir / 'template'
+
+        # 转换为绝对路径
+        absolute_path = file_path.resolve()
+        logger.debug(f'html模板路径:{absolute_path}')
+
+
+
+        # async with get_new_page() as page:
+        #     await page.goto(path)
+        #     pic = await page.screenshot(full_page=True)
+
+        pic = await template_to_pic(
+            template_path=absolute_path, 
+            template_name='template.html',
+            templates=content
+        )
         return pic
 
 
-    
+

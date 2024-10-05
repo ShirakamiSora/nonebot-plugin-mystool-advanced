@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="character_details">
+        <div class="character_bgc">
+            <img src="{{ character_bg }}" alt="">
+            <ul>
+                <!-- 命座先不改 -->
+                <li><img src="data/10000089/3a385d161f2f2ed7059d5ecc3bd60a28.png" alt=""></li>
+                <li><img src="data/10000089/d946273a6b107fa2c8b1a57ffc50ca68.png" alt=""></li>
+                <li><img src="data/10000089/4aefea8c7a2d19a92b5506e7e90f8afc.png" alt=""></li>
+                <li><img src="data/10000089/094311f6cb5655870af2bf2eb1d690ed.png" alt=""></li>
+                <li><img src="data/10000089/92dba37b2b1c6f85cc4e12a92df7237f.png" alt=""></li>
+                <li><img src="data/10000089/41861763a038895d546cbfca2e17b22a.png" alt=""></li>
+            </ul>
+        </div>
+        <div class="character_name_and_skill clearfix">
+            <div class="character_name_info">
+                <div class="element">
+                    <img src="{{ charatcer_element }}" alt="">
+                </div>
+                <div class="name_star_level">
+                    <div class="name_level">
+                        <div class="name">{{ character.name }}</div>
+                        <div class="level">{{ character.level }}</div>
+                    </div>
+                    <div class="star">
+                        <ul>
+                            {% for x in range(character.rarity) %}
+                                <li>★</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                </div>
+                <!-- 好感度 -->
+                <div class="fetter">好感度:{{ character.fetter }}</div>
+            </div>
+            <div class="character_skill">
+                <ul>
+                    {% for skill in character_skills%}
+                        <li>
+                            <img src="{{ skill.img }}" alt="">
+                            <span>{{ skill.name }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="middle">
+        <div class="character_base_properties">
+            <span class="title">角色属性</span>
+            <ul class="row">
+                <!-- 这里先不调整 -->
+                <ul>
+                    <!-- {% for properties_img, properties_name, add, final in properties %} -->
+                    <!-- <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>{{ properties_name }}</span>
+                        </div>
+                        <div class="calute">{{ add }}</div>
+                        <div class="sum">{{ final }}</div>
+                    </li> -->
+                    <!-- {% endfor %} -->
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>暴击率</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                </ul>
+                <ul>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>攻击力</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>暴击伤害</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                </ul>
+                <ul>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>防御力</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>治疗加成</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                </ul>
+                <ul>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>元素精通</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>受治疗加成</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                </ul>
+                <ul>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>风元素伤害加成</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                    <li>
+                        <div class="icon_name">
+                            <img src="" alt="">
+                            <span>元素充能效率</span>
+                        </div>
+                        <div class="calute">123</div>
+                        <div class="sum">1234</div>
+                    </li>
+                </ul>
+            </ul>
+        </div>
+        
+    </div>
+    <div class="character_weapon">
+        <div class="title">
+            <span>武器</span>
+        </div>
+        <div class="weapon_info">
+            <img src="{{ weapon_img }}" alt="">
+            <div class="info">
+                <div class="name">
+                    <div class="key">{{ weapon.name }}</div>
+                    <div class="value">{{ weapon.level }}</div>
+                </div>
+                <div class="attack">
+                    <div class="key">{{ weapon.main_property_name }}</div>
+                    <div class="value">{{ weapon.main_property.final }}</div>
+                </div>
+                <div class="other">
+                    <div class="key">{{ weapon.sub_property_name }}</div>
+                    <div class="value">{{ weapon.sub_property.final }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="relics">
+        <div class="title">
+            <span>圣遗物</span>
+        </div>
+        <div class="use_relic">
+            {% for relic in relics %}
+                <div class="relic">
+                    <div class="info">
+                        <div class="name_and_level">
+                            <div class="name">{{ relic.info.name }}</div>
+                            <div class="level">{{ relic.info.level }}</div>
+                        </div>
+                        <img src="{{ relic.info.img }}" alt="">
+                    </div>
+                    <div class="main">
+                        <div class="key">{{ relic.main.name}}</div>
+                        <div class="value">{{ relic.main.value }}</div>
+                    </div>
+                    <div class="others">
+                        {% for sub in relic.sub %}
+                            <div class="property">
+                                <div class="key">{{ sub.name }}</div>
+                                <div class="value">{{ sub.value }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

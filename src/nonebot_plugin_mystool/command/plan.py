@@ -954,7 +954,7 @@ async def _(event: Union[GeneralMessageEvent], matcher: Matcher, command_arg=Com
     for account in user.accounts.values():
         genshin_request = GenshinRequest(account)
         await genshin_new_api_debug.send(f"正在查询账号{account.display_name}下原神信息")
-        img_bytes = await genshin_request.generate_character_pic()
+        img_bytes = await genshin_request.get_one_character_info_by_pic(character_name)
         saa_img = Image(img_bytes)
         msg = '' + saa_img
         await msg.send()

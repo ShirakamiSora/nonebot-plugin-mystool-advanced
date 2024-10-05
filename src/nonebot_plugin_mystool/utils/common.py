@@ -43,7 +43,7 @@ __all__ = ["GeneralMessageEvent", "GeneralPrivateMessageEvent", "GeneralGroupMes
            "get_async_retry", "generate_device_id", "cookie_str_to_dict", "cookie_dict_to_str", "generate_ds",
            "get_validate", "generate_seed_id", "generate_fp_locally", "get_file", "blur_phone", "generate_qr_img",
            "send_private_msg", "send_group_msg", "wrap_and_forward_message", "get_unique_users", "get_all_bind", "read_blacklist", "read_whitelist",
-           "read_admin_list", "html2img"]
+           "read_admin_list", "html2img", "get_local_images"]
 
 # 启用 nonebot-plugin-send-anything-anywhere 的自动选择 Bot 功能
 enable_auto_select_bot()
@@ -530,3 +530,32 @@ async def html2img(html_url):
     """
     return 
     
+
+async def get_local_images(image_urls:list[str], save_dir:Path):
+    local_links = []
+    
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    for url in image_urls:
+        file_name = os.path.basename(url)
+        # local_path = os.path.join(save_dir, file_name)
+        # 先转换成绝对路径
+        local_path = str((save_dir / file_name).resolve())
+
+        if os.path.exists(local_path):
+            local_links.append(local_path)
+        else:
+            try:
+                async with httpx.AsyncClient() as client:
+                    res = await client.get(url)
+
+                with open(local_path, 'wb') as f:
+                    f.write(res.content)
+
+                local_links.append(local_path)
+            except Exception as e:
+                logger.debug(f'图片文件下载失败,链接为:{url},报错为:{e}')
+                local_links.append("")  # 下载失败返回空字符串
+
+    return local_links
