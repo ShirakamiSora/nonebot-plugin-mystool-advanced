@@ -288,6 +288,7 @@ class GenshinRequest:
         """
         character_info, property_map = await self.query_genshin_character_detail_info([character_name])
         character_id = character_info['base']['id']
+
         # 先将所有图片转换成本地路径
         # 角色背景图
         character_bgp_dir = data_path / f"genshin_template/data/{character_id}"
@@ -296,6 +297,18 @@ class GenshinRequest:
         # 角色元素图标,先不传，没找到链接
         # character_element_img_dir = str(data_path) + f'genshin_template/data/element'
         # local_character_element_img_link = await get_local_images([character_info['base']['image']], character_bgp_dir)
+
+        # 命座信息
+        character_constellations_dir = data_path / f"genshin_template/data/{character_id}/constellations"
+        constellations = [
+            {
+                "name":x['name'],
+                "icon":(await get_local_images([x['icon']], character_constellations_dir))[0],
+                "is_actived":x['is_actived'],
+                "pos":x['pos']
+            } for x in character_info['constellations']
+        ]
+        constellations.sort(key=lambda x:x['pos']) # 对整个命座进行一下排序，防止通过api请求的顺序不对
 
         # 角色属性
         # 一共28条属性，5+7+16
@@ -317,7 +330,7 @@ class GenshinRequest:
         character_skill_img_dir = data_path / f'genshin_template/data/{character_id}/skill'
         c_skills_icon = [x['icon'] for x in character_info['skills']]
         local_character_skill_img_link = await get_local_images(c_skills_icon, character_skill_img_dir)
-        character_skills = [{"name":x['name'], "img":local_character_skill_img_link[i]} for i, x in enumerate(character_info['skills'])]
+        character_skills = [{"name":x['name'], "img":local_character_skill_img_link[i], "level":x['level']} for i, x in enumerate(character_info['skills'])]
         
         # 武器图标
         weapon_img_dir = data_path / f'genshin_template/data/weapon'
@@ -361,7 +374,8 @@ class GenshinRequest:
             "weapon_img":local_weapon_img_link,
             "weapon":character_info['weapon'],
             "relics":relics,
-            "character_properties":character_properties
+            "character_properties":character_properties,
+            "constellations":constellations
         }
 
         return await self.genshin_generate_character_pic(res)
@@ -392,7 +406,8 @@ class GenshinRequest:
         pic = await template_to_pic(
             template_path=absolute_path, 
             template_name='template.html',
-            templates=content
+            templates=content,
+            pages={"viewport": {"width": 1000, "height": 1000}}
         )
         return pic
 

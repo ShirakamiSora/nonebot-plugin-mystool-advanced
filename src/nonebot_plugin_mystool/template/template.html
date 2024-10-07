@@ -10,15 +10,6 @@
     <div class="character_details">
         <div class="character_bgc">
             <img src="{{ character_bg }}" alt="">
-            <ul>
-                <!-- 命座先不改 -->
-                <li><img src="data/10000089/3a385d161f2f2ed7059d5ecc3bd60a28.png" alt=""></li>
-                <li><img src="data/10000089/d946273a6b107fa2c8b1a57ffc50ca68.png" alt=""></li>
-                <li><img src="data/10000089/4aefea8c7a2d19a92b5506e7e90f8afc.png" alt=""></li>
-                <li><img src="data/10000089/094311f6cb5655870af2bf2eb1d690ed.png" alt=""></li>
-                <li><img src="data/10000089/92dba37b2b1c6f85cc4e12a92df7237f.png" alt=""></li>
-                <li><img src="data/10000089/41861763a038895d546cbfca2e17b22a.png" alt=""></li>
-            </ul>
         </div>
         <div class="character_name_and_skill clearfix">
             <div class="character_name_info">
@@ -28,7 +19,7 @@
                 <div class="name_star_level">
                     <div class="name_level">
                         <div class="name">{{ character.name }}</div>
-                        <div class="level">{{ character.level }}</div>
+                        <div class="level">Lv.{{ character.level }}</div>
                     </div>
                     <div class="star">
                         <ul>
@@ -42,11 +33,30 @@
                 <!-- 好感度 -->
                 <div class="fetter">好感度:{{ character.fetter }}</div>
             </div>
+            <div class="constellations">
+                <ul>
+                    {% for constellation in constellations %}
+                        {% if constellation.is_actived %}
+                            <li class="highlight">
+                        {% else %}
+                            <li>
+                        {% endif %}
+                                <div class="container">
+                                    <img src="{{ constellation.icon }}" alt="">
+                                </div>
+                                <span>{{ constellation.name }}</span>
+                            </li>
+                    {% endfor %}
+                </ul>
+            </div>
             <div class="character_skill">
                 <ul>
                     {% for skill in character_skills%}
                         <li>
-                            <img src="{{ skill.img }}" alt="">
+                            <div class="circle-container">
+                                <img src="{{ skill.img }}" alt="">
+                                <span class="badge">{{ skill.level }}</span>
+                            </div>
                             <span>{{ skill.name }}</span>
                         </li>
                     {% endfor %}

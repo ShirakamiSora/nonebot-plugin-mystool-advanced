@@ -1,4 +1,6 @@
 body {
+    height: 100%;
+    width: 100%;
     font-family: 'Microsoft YaHei', Arial, sans-serif;
     /* background-color: #1e4796; */
     background: linear-gradient(to bottom, #18356d, #212d5d);
@@ -6,9 +8,11 @@ body {
     /* margin: 0;
     padding: 20px; */
     display: flex;
-    margin: 20px;
+    /* margin: 20px; */
+    margin: 0;
+    padding: 20px;
     flex-direction: column;
-    height: 100%;
+    box-sizing: border-box;
 }
 
 body > div {
@@ -38,12 +42,9 @@ li {
     justify-content: center;
     width: 100%;
     text-align: center;
+    flex-direction: column;
 }
 
-.character_bgc ul {
-    /* 之后再加命座 */
-    display: none;
-}
 
 .character_name_and_skill {
     display: flex;
@@ -63,6 +64,61 @@ li {
     content: "";
     display: block;
     clear: both;
+}
+
+.character_name_and_skill .constellations {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 10px 0;
+}
+
+.character_name_and_skill .constellations ul{
+    display: flex;
+    /* flex-direction: row; */
+    flex-wrap: wrap;
+}
+
+.character_name_and_skill .constellations ul li {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    filter: brightness(50%);
+    align-items: center;
+}
+
+.character_name_and_skill .constellations ul li .container {
+    position: relative;
+    width: 100px; /* 圆的宽度 */
+    height: 100px; /* 圆的高度 */
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明背景色 */
+    border-radius: 50%; /* 将容器设置为圆形 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+    margin-bottom: 15px;
+}
+
+.character_name_and_skill .constellations ul li img {
+    max-width: 100%; /* 限制图片最大宽度 */
+    max-height: 100px; /* 限制图片最大高度 */
+    object-fit: contain; /* 保持比例，居中显示 */
+    
+}
+
+.character_name_and_skill .constellations ul li.highlight {
+    filter: brightness(150%);
+}
+
+.character_name_and_skill .constellations ul li.highlight .container {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), /* 外层阴影，淡蓝色 */
+                0 0 30px rgba(12, 163, 213, 0.5), /* 中间层阴影，透明度较低 */
+                0 0 45px rgba(30, 88, 114, 0.3); /* 最外层阴影，透明度最低 */
+}
+
+.character_name_and_skill .constellations ul li span {
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
 }
 
 .character_name_info {
@@ -153,20 +209,56 @@ li {
 .character_skill ul li {
     flex: 1; /* 自动均匀分配宽度 */
     /* max-width: calc(100% / 5); 根据需要设置每行最多展示5个 */
-    height: 150px; /* 设定统一的高度 */
+    /* height: 150px; 设定统一的高度 */
     display: flex;
     flex-direction: column; /* 竖向排列 */
     overflow: hidden; /* 隐藏溢出部分 */
+    align-items: center;
+}
+
+.circle-container {
+    position: relative;
+    width: 100px; /* 圆的宽度 */
+    height: 100px; /* 圆的高度 */
+    background-color: rgba(0, 0, 0, 0.2); /* 半透明背景色 */
+    border-radius: 50%; /* 将容器设置为圆形 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+}
+
+.circle-container img {
+    width: 100px;  /* 根据需要调整图片大小 */
+    height: 100px; /* 根据需要调整图片大小 */
+    object-fit: cover; /* 确保图片在容器内完整展示 */
 }
 
 .character_skill ul li img {
     max-width: 100%; /* 限制图片最大宽度 */
     max-height: 100px; /* 限制图片最大高度 */
     object-fit: contain; /* 保持比例，居中显示 */
+    display: block;
+}
+
+.badge {
+    position: absolute;
+    bottom: 0px; /* 调整距离底部的距离 */
+    right: -2px;  /* 调整距离右边的距离 */
+    background-color: rgba(0, 0, 0, 0.5); /* 圆圈的背景色 */
+    color: white; /* 数字的字体颜色 */
+    width: 24px;  /* 圆圈的宽度 */
+    height: 24px; /* 圆圈的高度 */
+    border-radius: 50%; /* 将元素变为圆形 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+    font-size: 12px; /* 数字的大小 */
+    font-weight: bold; /* 数字的加粗 */
 }
 
 .character_skill ul li span {
-    text-align: center; /* 文字居中 */
+    justify-content: center;
+    align-items: center;
     margin-top: 5px; /* 与图片的间距 */
 }
 
