@@ -26,7 +26,6 @@ ul {
     padding: 5px;                /* 内边距 */
     margin: 5px;                 /* 外边距 */
     text-align: center;           /* 文字居中 */
-    
   }
 
 .wrapper {
@@ -213,4 +212,69 @@ ul {
     justify-content: center; /* 水平居中 */
     font-size: 12px; /* 数字的大小 */
     font-weight: bold; /* 数字的加粗 */
+}
+
+.bottom {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 20px;
+}
+
+.bottom > div {
+    width: 220px;
+    max-width: 240px;
+    background-color: rgba(84, 103, 124, 0.3);       /* 背景颜色 */
+    border-radius: 8px;           /* 圆角 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+    padding: 5px;                /* 内边距 */
+    margin: 5px;                 /* 外边距 */
+}
+
+.weapon {
+    padding: 5px;
+}
+
+.weapon img {
+    max-width: 180px;
+}
+
+.weapon_name {
+    font-size: 32px;
+    margin: 16px 0;
+    color: gold;
+    font-weight: bold;
+}
+
+.relic img {
+    max-width: 180px;
+}
+
+.relic .name_and_level {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+}
+
+.relic .name_and_level .name {
+    font-size: 20px;
+    font-weight: bold;
+    color: gold;
+}
+
+.relic .name_and_level .level {
+    display: flex;
+    margin-left: auto;
+    text-align: center;
+    font-size: 18px;
+    background-color: #fff;
+}
+
+.relic .main {
+    display: flex;
+    flex-direction: row;
+}
+
+.relic .others .property {
+    display: flex;
+    flex-direction: row;
 }
