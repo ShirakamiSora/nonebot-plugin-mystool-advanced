@@ -1,0 +1,216 @@
+body {
+    height: 100%;
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    /* background-color: #1e4796; */
+    background-image: url('data/bg/bg-hydro.jpg');
+    /* color: #fff; */
+    /* margin: 0;
+    padding: 20px; */
+    display: flex;
+    /* margin: 20px; */
+    
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.card {
+    background-color: rgba(127, 187, 251, 0.3);       /* 背景颜色 */
+    border-radius: 8px;           /* 圆角 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+    padding: 5px;                /* 内边距 */
+    margin: 5px;                 /* 外边距 */
+    text-align: center;           /* 文字居中 */
+    
+  }
+
+.wrapper {
+    width: 800px;          /* 占满父级容器的宽度 */
+    max-width: 800px;     /* 设置最大宽度，通常为响应式设计 */
+    margin: 0 auto;        /* 居中对齐 */
+    padding: 0 10px;       /* 内边距，防止内容贴边 */
+    box-sizing: border-box; /* 确保padding和border不会影响宽度 */
+    display: flex;
+    flex-direction: column;
+}
+
+.top {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
+
+.top .character_img {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
+
+.top .character_img img {
+    width: 375px;
+    height: 300px;
+}
+
+.top .character_img span {
+    position: absolute;
+    left: 50px;
+}
+
+.top .character_details {
+    left: auto;
+    position: absolute;
+    right: 0;
+    width: 450px;
+}
+
+.properties {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.properties .one_property {
+    width: 50%; /* 每行两个卡片 */
+    /* background-color: rgba(36, 67, 132, 0.3); */
+    box-sizing: border-box;
+    /* border: 1px solid rgba(255, 255, 255, 0.1); 卡片样式 */
+    padding: 10px 15px;
+    /* border-radius: 10px; */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.properties .one_property .icon_name {
+    width: 50%;
+}
+
+.properties .one_property .sum {
+    margin-left: auto;
+}
+
+.properties .one_property .calute {
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.properties .one_property .calute .add {
+    color: #6af1fd;
+}
+
+.constellations {
+    padding: 10px;
+    display: flex;
+    /* flex-direction: row; */
+    flex-wrap: wrap;
+}
+
+.constellations li {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    filter: brightness(50%);
+    align-items: center;
+}
+
+.constellations li .container {
+    position: relative;
+    width: 100px; /* 圆的宽度 */
+    height: 100px; /* 圆的高度 */
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明背景色 */
+    border-radius: 50%; /* 将容器设置为圆形 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+    margin-bottom: 15px;
+}
+
+.constellations li img {
+    max-width: 100%; /* 限制图片最大宽度 */
+    max-height: 100px; /* 限制图片最大高度 */
+    object-fit: contain; /* 保持比例，居中显示 */
+    
+}
+
+.constellations li.highlight {
+    filter: brightness(150%);
+}
+
+.constellations li.highlight .container {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), /* 外层阴影，淡蓝色 */
+                0 0 30px rgba(12, 163, 213, 0.5), /* 中间层阴影，透明度较低 */
+                0 0 45px rgba(30, 88, 114, 0.3); /* 最外层阴影，透明度最低 */
+}
+
+.middle {
+    display: flex;
+    flex-direction: column;
+}
+
+.middle .constellations {
+    display: flex;
+    flex-direction: row;
+}
+
+
+.middle .character_skill {
+    display: flex;
+    flex-wrap: wrap; /* 允许换行 */
+    padding: 10px;
+}
+
+.middle .character_skill img {
+    width: 100px;
+}
+
+.character_skill {
+    padding: 10px;
+}
+
+.character_skill li {
+    flex: 1; /* 自动均匀分配宽度 */
+    /* max-width: calc(100% / 5); 根据需要设置每行最多展示5个,好像没啥用 */
+    height: 150px; /* 设定统一的高度 */
+    display: flex;
+    flex-direction: column; /* 竖向排列 */
+    overflow: hidden; /* 隐藏溢出部分 */
+    align-items: center;
+}
+
+
+.circle-container {
+    position: relative;
+    width: 100px; /* 圆的宽度 */
+    height: 100px; /* 圆的高度 */
+    background-color: rgba(0, 0, 0, 0.2); /* 半透明背景色 */
+    border-radius: 50%; /* 将容器设置为圆形 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+}
+
+.badge {
+    position: absolute;
+    bottom: 0px; /* 调整距离底部的距离 */
+    right: -2px;  /* 调整距离右边的距离 */
+    background-color: rgba(0, 0, 0, 0.5); /* 圆圈的背景色 */
+    color: white; /* 数字的字体颜色 */
+    width: 24px;  /* 圆圈的宽度 */
+    height: 24px; /* 圆圈的高度 */
+    border-radius: 50%; /* 将元素变为圆形 */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+    font-size: 12px; /* 数字的大小 */
+    font-weight: bold; /* 数字的加粗 */
+}
