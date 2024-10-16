@@ -269,12 +269,31 @@ ul {
     background-color: #fff;
 }
 
-.relic .main {
+.relic .properties {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 }
 
-.relic .others .property {
+.relic .properties .main {
+    font-size: 24px;
+    color: #f0f0f0;
+}
+
+.relic .properties .other {
+    color: #060606;
+    filter: brightness(50%);
+}
+
+.relic .properties .property {
     display: flex;
     flex-direction: row;
+    padding: 5px 10px;
+}
+
+.relic .properties .property .key {
+    margin-right: auto;
+}
+
+.relic .properties .hit {
+    box-shadow: #6af1fd;
 }
