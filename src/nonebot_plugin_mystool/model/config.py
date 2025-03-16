@@ -119,6 +119,15 @@ class Preference(BaseModel):
     sign_retry_times: int = 5
     """签到失败默认重试次数"""
 
+    """
+    增加deepseek api支持
+    """
+    deepseek: bool = False
+    """功能默认不打开"""
+    deepseek_api_key: str = ''
+    """api秘钥"""
+    
+
     @validator("log_path", allow_reuse=True)
     def _(cls, v: Optional[Path]):
         absolute_path = v.absolute()

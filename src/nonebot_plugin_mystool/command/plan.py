@@ -501,8 +501,9 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
             msg = f"{notice_string}" \
                   f"\n🆔账户 {account.display_name}"
             
-            # 是否重新执行标记
+            # 是否重新执行标记, 增加重发次数限制（先写死
             repeat_flag = False
+            repeat_times = 0
             for key_name, (mission, current) in missions_state.state_dict.items():
                 if key_name == BaseMission.SIGN:
                     mission_name = "📅签到"
@@ -522,16 +523,19 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
             msg += f"\n🪙获得米游币: {missions_state.current_myb - myb_before_mission}" \
                    f"\n💰当前米游币: {missions_state.current_myb}"
 
-            if repeat_flag:
+            if repeat_flag and repeat_times <= 3:
                 random_relay = random.randint(3 * 60, 15 * 60)
                 msg += f"\n本次未全部签到成功，将于{random_relay // 60}分{random_relay % 60}秒后重新进行自动签到"
+                repeat_times += 1
+            else:
+                msg += f'\n本次未全部签到成功，但已达到最大自动重试次数，如仍需签到请手动发送命令'
             if matcher:
                 await matcher.send(msg)
             else:
                 for user_id in user_ids:
                     await send_private_msg(user_id=user_id, message=msg)
             
-            if repeat_flag:
+            if repeat_flag and repeat_times <= 3:
                 await asyncio.sleep(random_relay)
                 await perform_bbs_sign(user, user_ids, matcher)
 
