@@ -61,8 +61,9 @@ HEADERS_GET_POSTS = {
 }
 
 # 旧的API
+# 之前用的是"Host": "bbs-api.mihoyo.com"
 HEADERS_OLD = {
-    "Host": "bbs-api.mihoyo.com",
+    "Host": "bbs-api.miyoushe.com",
     "Referer": "https://app.mihoyo.com",
     'User-Agent': plugin_env.device_config.USER_AGENT_ANDROID_OTHER,
     "x-rpc-app_version": plugin_env.device_config.X_RPC_APP_VERSION,
