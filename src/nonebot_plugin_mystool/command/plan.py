@@ -385,7 +385,7 @@ async def perform_game_sign(
     
  
 
-async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Matcher = None):
+async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Matcher = None, repeat_times: int = 0):
     """
     执行米游币任务函数，并发送给用户任务执行消息。
 
@@ -537,7 +537,7 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
             
             if repeat_flag and repeat_times <= 3:
                 await asyncio.sleep(random_relay)
-                await perform_bbs_sign(user, user_ids, matcher)
+                await perform_bbs_sign(user, user_ids, matcher, repeat_times)
 
     # 如果全部登录失效，则关闭通知
     if len(failed_accounts) == len(user.accounts):
