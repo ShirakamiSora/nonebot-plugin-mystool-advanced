@@ -64,7 +64,7 @@ async def _(event: Union[GeneralMessageEvent], matcher: Matcher, state: T_State)
 
 
 @account_setting.got('bbs_uid')
-async def _(event: Union[GeneralMessageEvent], matcher: Matcher, state: T_State, bbs_uid=ArgStr()):
+async def function_bbs_uid(event: Union[GeneralMessageEvent], matcher: Matcher, state: T_State, bbs_uid=ArgStr()):
     """
     根据手机号设置相应的账户
     """
@@ -106,7 +106,7 @@ async def _(event: Union[GeneralMessageEvent], matcher: Matcher, state: T_State,
 
     # 体力的字符表达式
     f_str = [ f'{key}已打开体力推送\n' if value else f'{key}未打开体力推送\n' for key, value in account.enable_resign_notice_games.items()]
-    user_setting += f"\n\n6️⃣ 实时便笺体力提醒：\n{f_str}"
+    user_setting += f"\n\n6️⃣ 实时便笺体力提醒：\n{''.join(f_str)}"
 
     user_setting += f"\n7️⃣更改便笺体力提醒阈值 \
                       \n   当前原神提醒阈值：{account.user_resin_threshold} \
@@ -119,7 +119,7 @@ async def _(event: Union[GeneralMessageEvent], matcher: Matcher, state: T_State,
 
 
 @account_setting.got('setting_id')
-async def _(event: Union[GeneralMessageEvent], state: T_State, setting_id=ArgStr()):
+async def function_setting_id(event: Union[GeneralMessageEvent], state: T_State, setting_id=ArgStr()):
     """
     根据所选更改相应账户的相应设置
     """
@@ -173,6 +173,10 @@ async def _(event: Union[GeneralMessageEvent], state: T_State, setting_id=ArgStr
             "\n\n🚪发送“退出”即可退出"
         )
         state['setting_item'] = 'threshold_notice_flag'
+        # 把其他got函数取值占用，防止进入对应函数
+        state["notice_game"] = ""
+        state['setting_value'] = ''
+        state['setting_wb'] = ''
 
     elif setting_id == '7':
         await account_setting.send(
@@ -216,7 +220,7 @@ async def _(event: Union[GeneralMessageEvent], state: T_State, setting_id=ArgStr
 
 
 @account_setting.got('notice_game')
-async def _(_: Union[GeneralMessageEvent], state: T_State, notice_game=ArgStr()):
+async def function_notice_game(_: Union[GeneralMessageEvent], state: T_State, notice_game=ArgStr()):
     if notice_game == '退出':
         await account_setting.finish('🚪已成功退出')
     elif state["setting_item"] == "setting_notice_value":
@@ -240,7 +244,7 @@ async def _(_: Union[GeneralMessageEvent], state: T_State, notice_game=ArgStr())
 
 
 @account_setting.got('setting_wb')
-async def _(_: Union[GeneralMessageEvent], state: T_State, setting_wb=ArgStr()):
+async def function_setting_wb(_: Union[GeneralMessageEvent], state: T_State, setting_wb=ArgStr()):
     if setting_wb == '退出':
         await account_setting.finish('🚪已成功退出')
 
@@ -289,7 +293,7 @@ async def _(_: Union[GeneralMessageEvent], state: T_State, setting_wb=ArgStr()):
 
 
 @account_setting.got('setting_value')
-async def _(_: Union[GeneralMessageEvent], state: T_State, setting_value=ArgStr()):
+async def function_setting_value(_: Union[GeneralMessageEvent], state: T_State, setting_value=ArgStr()):
     if setting_value == '退出':
         await account_setting.finish('🚪已成功退出')
     account: UserAccount = state['account']
@@ -385,21 +389,24 @@ async def _(_: Union[GeneralMessageEvent], state: T_State, setting_value=ArgStr(
 
 
 @account_setting.got('threshold_notice_flag')
-async def _(_: Union[GeneralMessageEvent], state: T_State, threshold_notice_flag=ArgStr()):
-    # 上面的命令触发玩之后，紧接着的函数来处理后续，用setting_item来判断是不是这个函数来处理
+async def function_threshold_notice_flag(_: Union[GeneralMessageEvent], state: T_State, threshold_notice_flag=ArgStr()):
+    # 上面的命令触发完之后，紧接着的函数来处理后续，用setting_item来判断是不是这个函数来处理
 
     if threshold_notice_flag == '退出':
         await account_setting.finish('🚪已成功退出')
     elif state["setting_item"] == "threshold_notice_flag":
         account: UserAccount = state['account']
-        if threshold_notice_flag == '原神':
+        if threshold_notice_flag == '原神' or threshold_notice_flag == 'GenshinImpact':
             account.enable_resign_notice_games['GenshinImpact'] = not account.enable_resign_notice_games['GenshinImpact']
             PluginDataManager.write_plugin_data()
-            await account_setting.finish(f'游戏 原神 已打开体力推送')
-        elif threshold_notice_flag == '星铁' or threshold_notice_flag == '星穹铁道' or threshold_notice_flag == '崩铁':
+            await account_setting.finish(f'游戏 原神 已打开体力推送' if account.enable_resign_notice_games['GenshinImpact'] else f'游戏 原神 已关闭体力推送')
+        elif threshold_notice_flag == '星铁' or threshold_notice_flag == '星穹铁道' or threshold_notice_flag == '崩铁' or threshold_notice_flag == 'StarRail':
             account.enable_resign_notice_games['StarRail'] = not account.enable_resign_notice_games['StarRail']
             PluginDataManager.write_plugin_data()
-            await account_setting.finish(f'游戏 崩坏:星穹铁道 已打开体力推送')
+            await account_setting.finish(f'游戏 崩坏:星穹铁道 已打开体力推送' if account.enable_resign_notice_games['StarRail'] else f'游戏 崩坏:星穹铁道 已关闭体力推送')
+        else:
+            await account_setting.reject("⚠️您的输入有误，请重新输入")
+        state["setting_item"] = ""
 
 
 
