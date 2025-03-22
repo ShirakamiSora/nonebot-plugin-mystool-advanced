@@ -503,7 +503,6 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
             
             # 是否重新执行标记, 增加重发次数限制（先写死
             repeat_flag = False
-            repeat_times = 0
             for key_name, (mission, current) in missions_state.state_dict.items():
                 if key_name == BaseMission.SIGN:
                     mission_name = "📅签到"
@@ -527,7 +526,7 @@ async def perform_bbs_sign(user: UserData, user_ids: Iterable[str], matcher: Mat
                 random_relay = random.randint(3 * 60, 15 * 60)
                 msg += f"\n本次未全部签到成功，将于{random_relay // 60}分{random_relay % 60}秒后重新进行自动签到"
                 repeat_times += 1
-            else:
+            elif repeat_flag and repeat_times > 3:
                 msg += f'\n本次未全部签到成功，但已达到最大自动重试次数，如仍需签到请手动发送命令'
             if matcher:
                 await matcher.send(msg)
