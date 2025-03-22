@@ -556,7 +556,8 @@ async def genshin_note_check(user: UserData, user_ids: Iterable[str], matcher: M
     for account in user.accounts.values():
         note_notice_status.setdefault(account.bbs_uid, NoteNoticeStatus())
         genshin_notice = note_notice_status[account.bbs_uid].genshin
-        if account.enable_resin or matcher:
+        if account.enable_resign_notice_games['GenshinImpact'] or matcher:
+            # 判断用户个人设置里打开体力提醒时才发送通知
             genshin_board_status, note = await genshin_note(account)
             if not genshin_board_status:
                 if matcher:
@@ -644,7 +645,8 @@ async def starrail_note_check(user: UserData, user_ids: Iterable[str], matcher: 
     for account in user.accounts.values():
         note_notice_status.setdefault(account.bbs_uid, NoteNoticeStatus())
         starrail_notice = note_notice_status[account.bbs_uid].starrail
-        if account.enable_resin or matcher:
+        if account.enable_resign_notice_games['StarRail'] or matcher:
+            # 判断用户个人设置里打开体力提醒时才发送通知
             starrail_board_status, note = await starrail_note(account)
             if not starrail_board_status:
                 if matcher:

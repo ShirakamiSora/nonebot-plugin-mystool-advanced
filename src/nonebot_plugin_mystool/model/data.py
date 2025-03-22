@@ -238,8 +238,15 @@ class UserAccount(BaseModelWithSetter):
     '''是否开启米游币任务计划'''
     enable_game_sign: bool = True
     '''是否开启米游社游戏签到计划'''
-    enable_resin: bool = True
-    '''是否开启便笺提醒'''
+    # enable_resin: bool = True
+    # '''是否开启便笺提醒'''
+
+    enable_resign_notice_games: dict = {
+        "GenshinImpact":True,
+        "StarRail":True
+    }
+    '''按游戏设置体力便笺提醒，默认全打开'''
+
     platform: Literal["ios", "android"] = "ios"
     '''设备平台'''
     game_sign_games: List[str] = [
